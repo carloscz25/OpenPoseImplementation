@@ -1,3 +1,31 @@
+
+
+dataloader.py
+==============
+data loader class to collect image and annotations and supply them for training validation and testing
+
+helpers.py
+===========
+whatever helping function will be there if not associated to any other task
+
+multipersonparsing.py
+=====================
+file responsible for getting S & L structures and making associations between detected points to form limbs
+
+train.json
+=========
+adapted annotation file. Coco anns files groups annotated points in a per-person hierarchy. In real life you won't have that information, so we need to create new annotation files without
+that information. File outputted from process contained in /datapreparation/preparation_step0.py.
+
+val.json
+=========
+Same as before with validation data
+
+
+DATAPREPARATION FOLDER
+=======================
+=======================
+
 datapreparation.py
 ===================
 
@@ -25,6 +53,7 @@ following indications of the OpenPose paper
 verification_SL_Fields
 ======================
 file which purpose is to verify that S and L fields are created properly
+
 
 
 
