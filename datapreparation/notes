@@ -1,0 +1,31 @@
+datapreparation.py
+===================
+
+is only there for revision purposes. Not playing a role in the finla process. Its process is splitted in the two following files
+
+preparation_step0
+=================
+
+gathers data from the cocodataset in the PublicDatasetsFolder
+'/home/carlos/PycharmProjects/PublicDatasets/Coco/'
+ concretely annotations, and since the images are annotated on a entry per person and image (hence multiple entries may refer to a single image), we aggregate all the entries on a
+ per-image basis, since the finla net will have to manage accordingly: several person entries per image
+Annotations are stored in train.json and val.json in the root folder
+
+verification_step0
+====================
+
+It merely displays each image with its associated bounding boxes (one per person) and keypoints inside each bbox. Just for verification that the previous step is correct.
+
+SL_Fields
+=========
+contains function to create S and L fields for an image and its annotations
+following indications of the OpenPose paper
+
+verification_SL_Fields
+======================
+file which purpose is to verify that S and L fields are created properly
+
+
+
+
