@@ -2,8 +2,10 @@ import numpy as np
 import cv2
 import math
 
+#17
 bodyparts = ['nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear', 'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_wrist', 'right_wrist', 'left_hip', 'right_hip', 'left_knee', 'right_knee', 'left_ankle', 'right_ankle']
 skeleton = [[16, 14], [14, 12], [17, 15], [15, 13], [12, 13], [6, 12], [7, 13], [6, 7], [6, 8], [7, 9], [8, 10], [9, 11], [2, 3], [1, 2], [1, 3], [2, 4], [3, 5], [4, 6], [5, 7]]
+#19
 skeletonnames = ['left_tibia','left_femur','right_tibia','right_femur','left_2_right_hip','left_shoulder_hip','right_shoulder_hip','left_right_shoulder','left_shoulder_elbow', 'right_shoulder_elbow','left_antebrazo', 'right_antebrazo','left_right_eye','nose_left_eye','nose_right_eye','left_eye_ear','right_eye_ear', 'left_ear_shoulder', 'right_ear_shoulder']
 
 

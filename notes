@@ -1,8 +1,10 @@
 
 
-dataloader.py
+dataloader_invalid.py
 ==============
-data loader class to collect image and annotations and supply them for training validation and testing
+data loader class to collect image and annotations and supply them for training validation and testing. This file extracts the information however with an annotation per-person and image
+therefore NOT being correct for the OpenPose exercise, which is multi-person per image based. We need to use the annotations extracted from the resulting files of the datapreparation.py
+process: train.json and val.json
 
 helpers.py
 ===========
