@@ -13,7 +13,7 @@ dataset = CocoPoseDataset(imagepath, annotationpath, None)
 dataloader = DataLoader(dataset, batch_size=1)
 
 for im, ann, S, L in dataloader:
-    print('Annotations', ann['annotations'])
-    associations = performmultiparsing(S[0], L[0])
-    print('Associations', associations)
-    y=2
+    # print('Annotations', ann['annotations'])
+    associations, D, Dcounters = performmultiparsing(S[0], L[0])
+    img = im.clone().detach().numpy()[0]
+    for ii in skeleton:

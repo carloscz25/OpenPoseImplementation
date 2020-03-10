@@ -2,7 +2,7 @@ from helpers import bodyparts, skeleton, skeletonnames, vectormodule
 import numpy as np
 from munkres import Munkres
 import math
-
+from datapreparation.SL_Fields_Cython import get_D_set_from_S_field
 
 confidencemappartsthreshold = 0.7
 
@@ -17,24 +17,8 @@ def performmultiparsing(S,L):
     Dcounters = np.zeros(S.shape[0], np.uint8) #stores the number of points found for each part
     #speeding things up
     Snumpy = S.clone().detach().numpy()
-    S_READONLY = Snumpy.copy()
-    Snumpy = Snumpy.flatten()
-    for l in range(len(Snumpy)):
-        val = Snumpy[l]
-        if (val > confidencemappartsthreshold):
-            i = math.floor(l / (S.shape[1]*S.shape[2]))
-            j = 0
-
-
-    #getting D
-    for i in range(len(S_READONLY)):
-        counter=0
-        for j in (range(len(S_READONLY[i]))):
-            for k in (range(len(S_READONLY[i,j]))):
-                val = S_READONLY[i,j,k]
-                if (val > confidencemappartsthreshold):
-                    D[i,Dcounters[i]] = (j,k) #for each part i, we cound and store the position of the counter-th part found in the image
-                    Dcounters[i] +=1
+    #cython implementation
+    D, Dcounters = get_D_set_from_S_field(Snumpy, confidencemappartsthreshold)
     #building E Matrix holding E-values for each
     #candidate limb
     associations = {}
@@ -44,11 +28,11 @@ def performmultiparsing(S,L):
         Dcounters1, Dcounters2 = Dcounters[partindexfrom], Dcounters[partindexto]
         if ((Dcounters1 == 0) | (Dcounters2 == 0)):#if any has no-points, makes no sense look at this limb
             continue
-        EMtx = np.zeros((Dcounters1, Dcounters2), dtype=float)
+        EMtx = np.zeros((int(Dcounters1), int(Dcounters2)), dtype=float)
         Lpart = L[i]
         #filling EMtx
-        for a in range(Dcounters1):
-            for b in range(Dcounters2):
+        for a in range(int(Dcounters1)):
+            for b in range(int(Dcounters2)):
                 dj1 = D1[a]
                 dj2 = D2[b]
                 if ((dj1[0] - dj2[0])== 0) & ((dj1[1] - dj2[1])==0):
@@ -66,7 +50,8 @@ def performmultiparsing(S,L):
 
         #storing index association
         associations[i] = indices
-    return associations
+    #with this info we have enough info to rebuild the skeletons for all the people in the image
+    return associations, D, Dcounters
 
 
 
