@@ -28,6 +28,8 @@ def performmultiparsing(S,L):
         Dcounters1, Dcounters2 = Dcounters[partindexfrom], Dcounters[partindexto]
         if ((Dcounters1 == 0) | (Dcounters2 == 0)):#if any has no-points, makes no sense look at this limb
             continue
+        if (Dcounters1 != Dcounters2):
+            continue
         EMtx = np.zeros((int(Dcounters1), int(Dcounters2)), dtype=float)
         Lpart = L[i]
         #filling EMtx
@@ -38,15 +40,15 @@ def performmultiparsing(S,L):
                 if ((dj1[0] - dj2[0])== 0) & ((dj1[1] - dj2[1])==0):
                     continue
                 EMtx[a,b] = E(dj1, dj2, i, L)
-        maxval = np.max(EMtx)
+        #negate values for maximization
+        EMtx *= -1
         #once filled we need to find the best combination of a's and b's
         # by finding the max values of E for a and b combinations with the
         # constraint that a_i can only be connected to b_j and the same
         # rules for b values
         # Munkres or Hungarian Algorithm
         munkres = Munkres()
-        EMtx2 = munkres.make_cost_matrix(EMtx, lambda  profit: profit - maxval)
-        indices = munkres.compute(EMtx2)
+        indices = munkres.compute(EMtx)
 
         #storing index association
         associations[i] = indices

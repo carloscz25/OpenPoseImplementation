@@ -19,6 +19,9 @@ for k in imageanns.keys():
     path = os.path.join(imagepath, imageurl(k))
     img = cv2.imread(path)
     if img is not None:
-        showimageandannotations(img, imageanns[k])
+        # showimageandannotations(img, imageanns[k])
+        img2 = getimagewithdisplayedannotations(img, imageanns[k])
+        cv2.imshow('w', img2)
+        cv2.waitKey(0)
     else:
         print('image with id :' + str(k) +' is missing')

@@ -46,8 +46,9 @@ class CocoPoseDataset(IterableDataset):
         ann = self.annotations[image_id]
         im = cv2.imread(image_url)
         # imwann = self.__imageannotated__(im, ann)
+        print(image_url)
         S, L = createconfidencemapsforpartdetection(im, ann), createconfidencemapsforpartaffinityfields(im, ann)
-        return (im, ann, S, L)
+        return (im, ann, S, L, image_url)
 
     # def __imageannotated__(self, im, ann):
     #     imwann = np.copy(im)

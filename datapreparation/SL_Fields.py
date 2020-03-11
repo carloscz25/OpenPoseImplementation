@@ -76,7 +76,7 @@ def createconfidencemapsforpartaffinityfields(image, ann):
 def computeKeypointInPartAffinityMap(L, limbindex, kpifrom, kpito):
     # calculate unit vector
     limbname = skeletonnames[limbindex]
-    limb = (kpito[0] - kpifrom[0], kpito[1] - kpifrom[1])
+    limb = (kpito[1] - kpifrom[1], kpito[0] - kpifrom[0]) #swith the axes since coco is annotated x,y but opencv&numpy works y,x
     limblength = vectormodule(limb)
     limbunitvector = [i / limblength for i in limb]
 
@@ -86,6 +86,14 @@ def computeKeypointInPartAffinityMap(L, limbindex, kpifrom, kpito):
     min(kpifrom[0], kpito[0]) - disteval, min(kpifrom[1], kpito[1]) - disteval, max(kpifrom[0], kpito[0]) + disteval,
     max(kpifrom[1], kpito[1]) + disteval)
     x0, y0, x1, y1 = evalbox[0], evalbox[1], evalbox[2], evalbox[3]
+    if x0 < 0:
+        x0= 0
+    if y0 < 0:
+        y0 = 0
+    if x1 > (L.shape[2]-1):
+        x1 = L.shape[2] - 1
+    if y1 > L.shape[1]-1:
+        y1 = L.shape[1]-1
     for y in range(y1 - y0):
         for x in range(x1 - x0):
             # check if current point (x,y) is on limb

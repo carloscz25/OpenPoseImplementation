@@ -11,9 +11,12 @@ annotationpath = 'train.json'
 dataset = CocoPoseDataset(imagepath, annotationpath, None)
 
 dataloader = DataLoader(dataset, batch_size=1)
-
-for im, ann, S, L in dataloader:
+counter = -1
+for im, ann, S, L, impath in dataloader:
+    counter += 1
     # print('Annotations', ann['annotations'])
     associations, D, Dcounters = performmultiparsing(S[0], L[0])
-    img = im.clone().detach().numpy()[0]
-    for ii in skeleton:
+    img = getimagereconstructed_from_SLFields(im, associations, D)
+
+    cv2.imshow('w', img)
+    cv2.waitKey(0)
