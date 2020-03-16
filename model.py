@@ -2,19 +2,21 @@ import torchvision.models as models
 import torch
 import torch.nn as nn
 from collections import OrderedDict
+from torchvision.transforms import *
 
 
 class OpenPoseModel(nn.Module):
 
-    vggmodules = None
 
 
     def __init__(self):
-        #adding first 10 layers of VGG-19 net (pretrained with the downloaded state dict)
+        super(OpenPoseModel, self).__init__()
+        # adding first 10 layers of VGG-19 net (pretrained with the downloaded state dict)
         self.vggmodules = nn.Sequential(self.__preparevggmodules__())
-        self.LModule = nn.Sequential(OrderedDict([self.__newconvblock(0),self.__newconvblock(1),self.__newconvblock(2)]))
-        self.SModule = nn.Sequential()
 
+        # self.LModule = nn.Sequential(
+        #     OrderedDict([self.__newconvblock(0), self.__newconvblock(1), self.__newconvblock(2)]))
+        # self.SModule = nn.Sequential()
 
 
     def __preparevggmodules__(self):
@@ -35,7 +37,12 @@ class OpenPoseModel(nn.Module):
         return seq
 
     def forward(self, features):
-        pass
+        res = self.vggmodules(features)
+
+        y=2
+
+
+
 
 
 

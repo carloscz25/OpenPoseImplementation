@@ -8,7 +8,7 @@ from helpers import *
 
 
 #reading the prepared data
-jsondata = open('../train.json', 'r').read()
+jsondata = open('../../trainmpii.json', 'r').read()
 imageanns = json.loads(jsondata)
 imagepath = imageanns['imagepath']
 source = imageanns['source']

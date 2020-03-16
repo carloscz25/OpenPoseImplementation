@@ -7,6 +7,8 @@ import cv2
 import numpy as np
 import json
 from datapreparation.SL_Fields import createconfidencemapsforpartdetection, createconfidencemapsforpartaffinityfields
+from torchvision.transforms import *
+from PIL import Image
 
 class CocoPoseDataset(IterableDataset):
 
@@ -35,6 +37,16 @@ class CocoPoseDataset(IterableDataset):
         return self
 
 
+    def performtransforms(self, features):
+        comp = Compose([
+            CenterCrop(224),
+            ToTensor(),
+            Normalize((0.485, 0.456, 0.406),(0.229, 0.224, 0.225))
+            ]
+        )
+        res = comp(features)
+        return res
+
 
     def __next__(self):
         '''
@@ -48,7 +60,8 @@ class CocoPoseDataset(IterableDataset):
         # imwann = self.__imageannotated__(im, ann)
         print(image_url)
         S, L = createconfidencemapsforpartdetection(im, ann), createconfidencemapsforpartaffinityfields(im, ann)
-        return (im, ann, S, L, image_url)
+        impreprocessed = self.performtransforms(Image.fromarray(im))
+        return (im, impreprocessed, ann, S, L, image_url)
 
     # def __imageannotated__(self, im, ann):
     #     imwann = np.copy(im)
