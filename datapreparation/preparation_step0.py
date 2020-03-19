@@ -44,8 +44,8 @@ for i in range(len(anns['annotations'])):
     dict['keypoints'] = lp.tolist()
     dict['num_keypoints'] = anns['annotations'][i]['num_keypoints']
     print('processing #' + str(i))
-    if i==10:
-        break
+    # if i==10:
+    #     break
 print('dumping...')
 jsonstr = json.dumps(imageanns)
 with open('../train.json', 'w') as f:

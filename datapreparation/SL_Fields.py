@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from helpers import bodyparts, skeleton, skeletonnames, vectormodule
+from helpers import bodyparts, skeleton, skeletonnames, vectormodule, common_bodyparts, common_skeleton
 
 
 varianceforconfidencemaps = 1
@@ -19,14 +19,17 @@ def scoreconfidence(pointevaluated, keypoint):
 
 
 
-def createconfidencemapsforpartdetection(image, ann):
+def createconfidencemapsforpartdetection(imageshape, ann):
     #the map will have the same dimension as the image
-    s = np.zeros((len(bodyparts),image.shape[0], image.shape[1]), dtype=np.float)
+    s = np.zeros((len(common_bodyparts),imageshape[0], imageshape[1]), dtype=np.float)
     # for y in range(image.shape[0]):
     #     for x in range(image.shape[1]):
-    for bodypartindex in range(len(bodyparts)):
+    for bodypartindex in range(len(common_bodyparts)):
         for personindex in range(len(ann['annotations'])):
-            kp = ann['annotations'][personindex]['keyoints']
+            #if image is not annotated skip
+            if ('keypoints' in ann['annotations'][personindex])==False:
+                continue
+            kp = ann['annotations'][personindex]['keypoints']
             # we create a confidencemap for each jth-part and person
             kpi = kp[bodypartindex*3:(bodypartindex*3)+3]
             if (kpi[2]==0): #if 1=not visible but annotated, if 2=visible and annotated
@@ -51,19 +54,22 @@ def createconfidencemapsforpartdetection(image, ann):
                             s[bodypartindex,y0+y,x0+x] = confidence
     return s
 
-def createconfidencemapsforpartaffinityfields(image, ann):
+def createconfidencemapsforpartaffinityfields(imageshape, ann):
     limbsfound = []
     #the map will have the same dimension as the image
-    L = np.zeros((len(skeleton),image.shape[0], image.shape[1],2), dtype=np.float)
+    L = np.zeros((len(common_skeleton),imageshape[0], imageshape[1],2), dtype=np.float)
     # for y in range(image.shape[0]):
     #     for x in range(image.shape[1]):
-    for limbindex in range(len(skeleton)):
+    for limbindex in range(len(common_skeleton)):
         for personindex in range(len(ann['annotations'])):
-            kp = ann['annotations'][personindex]['keyoints']
+            # if image is not annotated skip
+            if ('keypoints' in ann['annotations'][personindex]) == False:
+                continue
+            kp = ann['annotations'][personindex]['keypoints']
             # we calculate the difference of the 2 keypoints
             # indicated for the linb pointed by bodypartindexes
-            indexfrom = skeleton[limbindex][0]-1
-            indexto = skeleton[limbindex][1]-1
+            indexfrom = common_skeleton[limbindex][0]-1
+            indexto = common_skeleton[limbindex][1]-1
             kpifrom = kp[indexfrom*3:(indexfrom*3)+3]
             kpito = kp[indexto * 3:(indexto * 3) + 3]
             if ((kpifrom[2]==0)|(kpito[2]==0)): #if 1=not visible but annotated, if 2=visible and annotated

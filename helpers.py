@@ -15,6 +15,8 @@ skeletoncolors = []
 # id - joint id (0 - r ankle, 1 - r knee, 2 - r hip, 3 - l hip, 4 - l knee, 5 - l ankle, 6 - pelvis, 7 - thorax, 8 - upper neck, 9 - head top, 10 - r wrist, 11 - r elbow, 12 - r shoulder, 13 - l shoulder, 14 - l elbow, 15 - l wrist)
 mpii_bodyparts = ['r ankle','r knee','r hip','l hip','l knee','l ankle','pelvis','thorax','upper neck','head top','r wrist','r elbow','r shoulder','l shoulder','l elbow','l wrist']
 
+
+
 COCO = 2
 MPii = 3
 
@@ -33,6 +35,10 @@ mappingtable.append([8,'right hip',12, 2])
 mappingtable.append([9,'right shoulder',6, 12])
 mappingtable.append([10,'right elbow',8, 11])
 mappingtable.append([11,'right wrist',10, 10])
+
+common_bodyparts = [i[1] for i in mappingtable]
+common_skeleton = [[1,2],[2,3],[3,4],[4,5],[5,6],[7,8],[8,9],[9,10],[10,11],[11,12]]
+common_skeleton_names = ['left_tibia', 'left_femur', 'left_hip_shoulder', 'left_shoulder_elbow', 'left_elbow_wrist','right_tibia', 'right_femur', 'right_hip_shoulder', 'right_shoulder_elbow', 'right_elbow_wrist']
 
 def getpartindex(fromdataset, todataset, partindex):
     '''
@@ -80,7 +86,7 @@ def getimagewithdisplayedannotations(im, dict):
         h = y + int(bbox[3])
         # cv2.rectangle(overlay, (x, y), (w, h), color, 2)
         #keypoints
-
+        index = 0
         for index in range(len(mappingtable)):
             bpname = mappingtable[index][1]
             pp = ann['keypoints'][(index*3):((index*3)+3)]
@@ -90,6 +96,7 @@ def getimagewithdisplayedannotations(im, dict):
                     color = (0,0,255)
                 cv2.circle(overlay, (pp[0], pp[1]),2, color, 2)
                 cv2.putText(overlay, str(index), (pp[0],pp[1]),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), thickness=2)
+                cv2.putText(overlay, str(bpname), (pp[0]+10, pp[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), thickness=1)
     cv2.addWeighted(im2, 1, overlay, 5, 0, dst=im3)
     return im3
 
@@ -109,3 +116,23 @@ def indexof(l, value):
         return l.index(value)
     except:
         return -1
+
+
+def adjustannotationpoints(ann, fromsize, tosize):
+    annotations = ann['annotations']
+    for a in annotations:
+        for d in a.keys():
+            if (d=='bbox'):
+                bbox = a['bbox']
+                #en las anotaciones y y las imagenes las coordenadas x,y estan invertidas
+                bbox[0] = int((tosize[1] / fromsize[1]) * bbox[0])
+                bbox[1] = int((tosize[0] / fromsize[0]) * bbox[1])
+                bbox[2] = int((tosize[1] / fromsize[1]) * bbox[2])
+                bbox[3] = int((tosize[0] / fromsize[0]) * bbox[3])
+            if (d=='keypoints'):
+                l = a['keypoints']
+                for i in range(0, len(l),3):
+                    l[i] = int((tosize[1] / fromsize[1]) * l[i])
+                    l[i+1] = int((tosize[0] / fromsize[0]) * l[i+1])
+    return ann
+
