@@ -8,9 +8,9 @@ datasetnames = ['coco', 'mpii']
 model = OpenPoseModel()
 model.train()
 
-paramsF = model.Fparameters()
-paramsL = model.Lparameters()
-paramsS = model.Sparameters()
+paramsF = model.F.parameters()
+paramsL = model.L.parameters()
+paramsS = model.S.parameters()
 
 optimizerF = torch.optim.Adam(paramsF, lr=0.001)
 optimizerL = torch.optim.Adam(paramsL, lr=0.001)
@@ -25,12 +25,18 @@ dataloader = OpenPoseDataset(['coco','mpii'], [0.9,0.1], ['/home/carlos/PycharmP
 while(True):
     batch = next(dataloader)
     im = batch[1]
-    Ltarget = batch[5]
-    Starget = batch[6]
+    Starget = batch[5]
+    Ltarget = batch[6]
     im = im.unsqueeze(0)
     F = model.F(im)
     #run L stages
-    L, Lflat = model.forward_L(F)
+    L = F
+    for i in range(4):
+        L, Lflat = model.forward_L(L, i)
+        if (i<3):
+            L = torch.cat((F, L), 1)
+    Lflat = model.Ldecoder(Lflat)
+    L = Lflat.reshape((1,2,112,112))
     #run S stages
     S, Sflat = model.forward_S()
 
