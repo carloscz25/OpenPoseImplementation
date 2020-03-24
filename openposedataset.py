@@ -1,5 +1,6 @@
 from torch.utils.data.dataset import *
 import os
+import torch
 import cv2
 import PIL.Image as Image
 from pycocotools.coco import COCO
@@ -74,23 +75,42 @@ class OpenPoseDataset(IterableDataset):
                 imagepath = self.imagepaths[i]
                 break
 
-        image_id = next(iterator)
-        while (image_id.isdigit()==False):
-            image_id = next(iterator)
 
-        image_url = os.path.join(imagepath, self.imageurl(datasetname, image_id))
-        ann = self.annotations[datasetname][image_id]
-        im = cv2.imread(image_url)
-        annadjusted = adjustannotationpoints(copy.deepcopy(ann), im.shape, (224,224))
+
+
+        esvalido = False
+        while (esvalido == False):
+            image_id = next(iterator)
+            if (image_id.isdigit()==False):
+                continue
+            ann = self.annotations[datasetname][image_id]
+            try:
+                for a in ann['annotations']:
+                    b = a['bbox']
+                esvalido = True
+                image_url = os.path.join(imagepath, self.imageurl(datasetname, image_id))
+                im = cv2.imread(image_url)
+                if (im ==None):
+                    esvalido = False
+            except:
+                    pass
+
+
+
+
+
+
+
+        original_image_dim = im.shape
+
+        annadjusted = adjustannotationpoints(copy.deepcopy(ann), im.shape, (28, 28))
         impreprocessed = self.performtransforms(Image.fromarray(im))
 
         # imwann = self.__imageannotated__(im, ann)
-        print(image_url)
-        S, L = createconfidencemapsforpartdetection((224,224), annadjusted), createconfidencemapsforpartaffinityfields((224,224), annadjusted)
+        # print(image_url)
+        S, L = createconfidencemapsforpartdetection((28, 28), annadjusted), createconfidencemapsforpartaffinityfields((28, 28), annadjusted)
 
-        #return 0=original image, 1=preprocessed image, 2=image resized to input but unnormalized for visualization purposes
-        #3 original annotations, 4=size adjusted annotations, 5 S size adjusted, 6 L size adjusted, 7 image url
-        return [im, impreprocessed, cv2.resize(im, (self.inputimagesize, self.inputimagesize)), ann, annadjusted, S, L, image_url]
+        return (impreprocessed, annadjusted, torch.from_numpy(S), torch.from_numpy(L), image_url, torch.from_numpy(np.asarray(original_image_dim)))
 
 
 

@@ -136,3 +136,53 @@ def adjustannotationpoints(ann, fromsize, tosize):
                     l[i+1] = int((tosize[0] / fromsize[0]) * l[i+1])
     return ann
 
+def drawSvsStarget(S_batch, St_batch):
+    cols = 4
+    partsnumber = 12
+    rows = int((12/cols) * 2)
+    im = np.zeros((rows*28, cols*28), np.float)
+
+    S = S_batch.clone().detach().numpy()
+    for i in range(S.shape[0]):
+        for j in range(S.shape[1]):
+            s_part_pic = S[i][j]
+            mx, mn = np.max(s_part_pic), np.min(s_part_pic)
+            for k in range(s_part_pic.shape[0]):
+                for l in range(s_part_pic.shape[1]):
+                    s_part_pic[k][l] = (s_part_pic[k][l]-mn)/(mx-mn)
+            s_part_pic *= 255
+        break
+    S1 = S[0]
+    St = St_batch.clone().detach().numpy()
+    for i in range(St.shape[0]):
+        for j in range(St.shape[1]):
+            s_part_pic = St[i][j]
+            mx, mn = np.max(s_part_pic), np.min(s_part_pic)
+            for k in range(s_part_pic.shape[0]):
+                for l in range(s_part_pic.shape[1]):
+                    s_part_pic[k][l] = (s_part_pic[k][l] - mn) / (mx - mn)
+            s_part_pic *= 255
+        break
+    S2 = St[0]
+
+
+    currcol = 0
+    currrow = 0
+    for part in range(12):
+        y1,y2 = currrow*28, (currrow+1)*28
+        x1,x2 = currcol*28, currcol*28
+        im[y1:(y1+28),x1:(x1+28)] = S1[part]
+        im[y2:(y2+28), x2:(x2+28)] = S2[part]
+        currcol +=1
+        if currcol == 4:
+            currcol, currrow = 0, currrow + 1
+
+    return im
+
+
+
+
+
+
+
+

@@ -13,17 +13,19 @@ imagepath = '/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017'
 jsondata = open('../train.json', 'r').read()
 imageanns = json.loads(jsondata)
 for k in imageanns.keys():
-    path = os.path.join(imagepath, imageurl(k))
+    if k.isdigit()==False:
+        continue
+    path = os.path.join(imagepath, imageurl(k,'CocoDataset'))
     img = cv2.imread(path)
     anns = imageanns[k]
     iwda = getimagewithdisplayedannotations(img, anns)
-    confidencemaps = createconfidencemapsforpartdetection(img, anns)
-    partaffinitymaps = createconfidencemapsforpartaffinityfields(img, anns)
+    confidencemaps = createconfidencemapsforpartdetection(img.shape, anns)
+    partaffinitymaps = createconfidencemapsforpartaffinityfields(img.shape, anns)
     #translate confidencemaps to grayscale
     aggregatedmap = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
     for bp in range(len(partaffinitymaps)):
         map = partaffinitymaps[bp]
-        m = np.swapaxes(map, 0,2)[0][:][:]
+        m = map.copy()
         m_ = np.zeros((m.shape[0], m.shape[1],3),dtype=np.uint8)
         hasdata = False
         for y in range(len(m)):
@@ -33,7 +35,7 @@ for k in imageanns.keys():
                     hasdata = True
         if hasdata==False:
             continue
-        m_ = np.swapaxes(m_, 0,1)
+
         aggregatedmap += m_
         # m = [255 for y in range(len(m)) for x in range(len(m[y])) ]
         # cv2.imshow('map_'+skeletonnames[bp], m)

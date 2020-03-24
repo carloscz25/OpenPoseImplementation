@@ -57,7 +57,7 @@ def createconfidencemapsforpartdetection(imageshape, ann):
 def createconfidencemapsforpartaffinityfields(imageshape, ann):
     limbsfound = []
     #the map will have the same dimension as the image
-    L = np.zeros((len(common_skeleton),imageshape[0], imageshape[1],2), dtype=np.float)
+    L = np.zeros((len(common_skeleton)*2,imageshape[0], imageshape[1]), dtype=np.float)
     # for y in range(image.shape[0]):
     #     for x in range(image.shape[1]):
     for limbindex in range(len(common_skeleton)):
@@ -84,6 +84,9 @@ def computeKeypointInPartAffinityMap(L, limbindex, kpifrom, kpito):
     limbname = skeletonnames[limbindex]
     limb = (kpito[1] - kpifrom[1], kpito[0] - kpifrom[0]) #swith the axes since coco is annotated x,y but opencv&numpy works y,x
     limblength = vectormodule(limb)
+    #parche=> considerar eliminacion
+    if (limblength==0.0):
+        limblength = 0.001
     limbunitvector = [i / limblength for i in limb]
 
     # traverse the affected window
@@ -116,8 +119,8 @@ def computeKeypointInPartAffinityMap(L, limbindex, kpifrom, kpito):
             c2 = p_distance_to_limb <= threshold_distance_to_limb
 
             if (c1 == True & c2 == True):
-                L[limbindex][y + y0][x + x0][0] = limbunitvector[0]
-                L[limbindex][y + y0][x + x0][1] = limbunitvector[1]
+                L[(limbindex*2)][y + y0][x + x0] = limbunitvector[0]
+                L[(limbindex*2)+1][y + y0][x + x0] = limbunitvector[1]
 
 
 
