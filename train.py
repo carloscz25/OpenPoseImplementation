@@ -52,6 +52,12 @@ def add_scalars_for_modname(mods, name, step):
     writer.add_scalars(name, d, step)
 
 
+def add_scalar_max_min(name, step, arr):
+    d = {}
+    d['max'] = torch.max(arr).item()
+    d['min'] = torch.min(arr).item()
+    writer.add_scalars(name, d, step)
+
 model = OpenPoseModel(224,224,224)
 
 #monitoring part
@@ -77,8 +83,8 @@ model.train()
 
 
 
-optimizerL = torch.optim.Adam(paramsL, lr=0.001)
-optimizerS = torch.optim.Adam(paramsS, lr=0.001)
+optimizerL = torch.optim.SGD(paramsL, lr=0.01)
+optimizerS = torch.optim.SGD(paramsS, lr=0.01)
 
 
 criterionF = torch.nn.MSELoss('none')
@@ -100,7 +106,11 @@ def collatefn(o):
     return oa, ext
 
 batchsize = 16
-dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images'], ['train.json', 'trainmpii.json'])
+paths = {}
+paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
+paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datasets/mpii/images']
+
+dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['cloud'], ['train.json', 'trainmpii.json'])
 dataloader = torch.utils.data.DataLoader(dataset, batchsize, collate_fn=collatefn)
 for step, batch in enumerate(dataloader):
 
@@ -113,34 +123,42 @@ for step, batch in enumerate(dataloader):
     # Starget = torch.from_numpy(Starget).float().unsqueeze(0)
 
     # im = im.unsqueeze(0)
-
+    add_scalar_max_min('impreprocessed', step, impreprocessed)
     F = model.F(impreprocessed)
+    add_scalar_max_min('F', step, F)
 
     #CPM part
     F = model.cpm1(F)
     F = model.cpm1prlu(F)
     F = model.cpm2(F)
     F = model.cpm2prlu(F)
+    add_scalar_max_min('CPM', step, F)
 
     #run L stages
     #stage1
 
     L = model.L1(F)
+    add_scalar_max_min('L1', step, L)
     Linput = torch.cat((F, L), 1)
     L = model.L2(Linput)
+    add_scalar_max_min('L2', step, L)
     Linput = torch.cat((F, L), 1)
     L = model.L3(Linput)
+    add_scalar_max_min('L3', step, L)
     Linput = torch.cat((F, L), 1)
     L = model.L4(Linput)
+    add_scalar_max_min('L4', step, L)
     Linput = torch.cat((F, L), 1)
     L = model.L5(Linput)
-
+    add_scalar_max_min('L5', step, L)
     # S stages
     # stage1
     Sinput = torch.cat((F, L), 1)
     S = model.S1(Sinput)
+    add_scalar_max_min('S1', step, L)
     Sinput = torch.cat((F, L, S), 1)
     S = model.S2(Sinput)
+    add_scalar_max_min('S2', step, L)
 
     model.zero_grad()
     # L[Ltarget==0]=0
@@ -169,14 +187,10 @@ for step, batch in enumerate(dataloader):
     scs['S'] = lossS
     writer.add_scalars('main',scs, step)
 
-    # main
-    scs = {}
-    scs['L'] = lossL
-    scs['S'] = lossS
-    writer.add_scalars('main', scs, step)
+
 
     # add_scalars_for_modname(mods, '_F_', step)
-    add_scalars_for_modname(mods, '_cpm', step)
+    # add_scalars_for_modname(mods, '_cpm', step)
     # add_scalars_for_modname(mods, '_L1_', step)
     # add_scalars_for_modname(mods, '_L2_', step)
     # add_scalars_for_modname(mods, '_L3_', step)
