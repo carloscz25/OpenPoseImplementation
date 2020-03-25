@@ -3,7 +3,7 @@ import os
 import torch
 import cv2
 import PIL.Image as Image
-from pycocotools.coco import COCO
+
 import cv2
 import numpy as np
 import json
