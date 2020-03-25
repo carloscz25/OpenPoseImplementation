@@ -110,7 +110,7 @@ paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
 paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datasets/mpii/images']
 
-dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['local'], ['train.json', 'trainmpii.json'])
+dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['cloud'], ['train.json', 'trainmpii.json'])
 dataloader = torch.utils.data.DataLoader(dataset, batchsize, collate_fn=collatefn)
 for step, batch in enumerate(dataloader):
 
