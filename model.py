@@ -163,8 +163,8 @@ class OpenPoseModel(nn.Module):
 
     def __initvgg19(self):
         from  torchvision.models import vgg19_bn
-        m = vgg19_bn()
-        m.load_state_dict(torch.load('vgg19bn.pth'))
+        m = vgg19_bn(pretrained=True)
+        # m.load_state_dict(torch.load('vgg19bn.pth'))
         vgg19dict = OrderedDict()
         for i, mod in enumerate(m.features._modules):
             if i == 33:
