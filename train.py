@@ -16,27 +16,7 @@ def set_requires_grad(model, truefalse):
     for p in model.parameters():
         p.requires_grad = truefalse
 
-def initw(o):
-    #weight initialization
-    if o.__class__.__name__=='ReLU':
-        return
-    if o.__class__.__name__=='MaxPool2d':
-        return
-    if o.__class__.__name__=='Sequential':
-        return
-    if o.__class__.__name__=='LStageBlock':
-        return
-    if o.__class__.__name__=='SStageBlock':
-        return
-    if o.__class__.__name__=='LStage':
-        return
-    if o.__class__.__name__=='SStage':
-        return
-    o.weight.data.normal_(0.0, 0.1)
-    if o.__class__.__name__=='PReLU':
-        return
-    o.bias.data.normal_(0.0, 0.1)
-    y=2
+
 
 
 
