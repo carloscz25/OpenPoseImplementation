@@ -17,7 +17,7 @@ class OpenPoseDataset(IterableDataset):
 
 
 
-    def __init__(self, datasetnames, weights, imagepaths, annotationpaths):
+    def __init__(self, datasetnames, weights, imagepaths, annotationpaths, training_inference='training'):
         super(OpenPoseDataset).__init__()
         self.inputimagesize = 224
         self.datasetnames = datasetnames
@@ -26,6 +26,8 @@ class OpenPoseDataset(IterableDataset):
         self.annotationpaths = annotationpaths
         self.annotations = {}
         self.annotationiterators = {}
+        self.training_inference = training_inference
+
         for i, path in enumerate(self.annotationpaths):
             self.annotations[self.datasetnames[i]] = json.loads(open(path,'r').read())
             self.annotationiterators[self.datasetnames[i]] = iter(self.annotations[self.datasetnames[i]])
@@ -54,11 +56,13 @@ class OpenPoseDataset(IterableDataset):
         return res
 
 
+
     def __next__(self):
         '''
 
         :return:im-> original image / ann -> annotations / imwann -> image with specific annotations overlayed (bbox, keypoints, skeleton)
         '''
+
         from random import random
 
         rand = random()
@@ -95,12 +99,6 @@ class OpenPoseDataset(IterableDataset):
             except:
                     pass
 
-
-
-
-
-
-
         original_image_dim = im.shape
 
         annadjusted = adjustannotationpoints(copy.deepcopy(ann), im.shape, (28, 28))
@@ -108,9 +106,13 @@ class OpenPoseDataset(IterableDataset):
 
         # imwann = self.__imageannotated__(im, ann)
         # print(image_url)
+        self.getnewiteration = False
         S, L = createconfidencemapsforpartdetection((28, 28), annadjusted), createconfidencemapsforpartaffinityfields((28, 28), annadjusted)
+        if self.training_inference == 'training':
+            return (impreprocessed, annadjusted, torch.from_numpy(S), torch.from_numpy(L), image_url, torch.from_numpy(np.asarray(original_image_dim)))
+        if self.training_inference == 'inference':
+            return (impreprocessed, annadjusted, ann, torch.from_numpy(S), torch.from_numpy(L), image_url, torch.from_numpy(np.asarray(original_image_dim)))
 
-        return (impreprocessed, annadjusted, torch.from_numpy(S), torch.from_numpy(L), image_url, torch.from_numpy(np.asarray(original_image_dim)))
 
 
 

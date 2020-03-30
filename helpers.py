@@ -68,6 +68,31 @@ def vectormodule(vector):
     res = math.sqrt(a)
     return res
 
+def getimagewithpartheatmaps(im, S):
+    '''im and S must have same width/height'''
+    S3 = np.zeros((im.shape[0], im.shape[1], 3), np.uint8)
+    color = [255,255,0]
+    for i in range(len(S)):
+        for y in range(len(S[i])):
+            for x in range(len(S[i][y])):
+                yc = int(y*(im.shape[0]/S[i].shape[0]))
+                xc = int(x * (im.shape[1] / S[i].shape[1]))
+                if S[i,y,x] < 0.01:
+                    continue
+                S3[yc,xc,0] = int(color[0] * S[i,y,x])
+                S3[yc, xc, 1] = int(color[1] * S[i, y, x])
+                S3[yc, xc, 2] = int(color[2] * S[i, y, x])
+                if S3[yc,xc,0]>=250:
+                    pause = True
+                    cv2.circle(S3, (xc,yc), 3, (255,255,0), 2)
+
+
+    im2 = np.copy(im)
+    im3 = im.copy()
+    cv2.addWeighted(im2, 1, S3, 5, 0, im3)
+    return im3
+
+
 def getimagewithdisplayedannotations(im, dict):
     im2 = np.copy(im)
     overlay0 = np.zeros(im.shape, dtype=np.uint8)
@@ -116,6 +141,8 @@ def indexof(l, value):
         return l.index(value)
     except:
         return -1
+
+
 
 
 def adjustannotationpoints(ann, fromsize, tosize):

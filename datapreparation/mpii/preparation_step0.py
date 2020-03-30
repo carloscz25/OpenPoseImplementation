@@ -59,7 +59,8 @@ for i in range(imagenumber):
                 bbx[2] = max(bbx[2], x)
                 bbx[3] = max(bbx[3], y)
                 try:
-                    is_visible = int(pstr.is_visible[0,0])
+                    # is_visible = int(pstr.is_visible[0,0])
+                    is_visible = int(pstr.is_visible[0])
                 except:
                     is_visible = int(-1)
                 if is_visible == True:

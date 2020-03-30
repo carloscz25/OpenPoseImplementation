@@ -6,6 +6,7 @@ from torchvision.transforms import *
 
 
 
+
 class LStageBlock(nn.Module):
     def __init__(self,firstlayerinputdim=128, blockinputdim=96):
         super(LStageBlock, self).__init__()
@@ -88,7 +89,7 @@ class SStage(nn.Module):
 
 class OpenPoseModel(nn.Module):
 
-    def __init__(self, FSize, LSize, SSize):
+    def __init__(self):
         super(OpenPoseModel, self).__init__()
         self.F = self.__initvgg19()
         #CPM

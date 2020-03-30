@@ -72,10 +72,8 @@ for i in range(imagenumber):
                 if inn !=-1:
                     cv2.putText(im, str(mappingtable[inn][1]), (points[k][0]+10, points[k][1]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), thickness=1)
 
-            cv2.imshow('w', im)
-            cv2.waitKey(0)
+    cv2.imshow('w', im)
+    cv2.waitKey(0)
 
     print('image n#' + str(i))
-    if i ==30:
-        break
 
