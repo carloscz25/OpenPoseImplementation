@@ -106,7 +106,7 @@ paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
 paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datasets/mpii/images']
 
-dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['local'], ['train.json', 'trainmpii.json'])
+dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['cloud'], ['train.json', 'trainmpii.json'])
 dataloader = torch.utils.data.DataLoader(dataset, batchsize, collate_fn=collatefn)
 singlebatch = None
 for step, batch in enumerate(dataloader):
@@ -273,7 +273,7 @@ for step, batch in enumerate(dataloader):
     writer.add_scalar('free', mem.free, step)
 
     #adding images
-    if step % 1000 == 0: 
+    if step % 1000 == 0:
         if step > 0:
             for i in range(batchsize):
                 original_image = cv2.imread(image_url[i])
