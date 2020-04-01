@@ -68,7 +68,7 @@ set_requires_grad(model.L5, False)
 set_requires_grad(model.S1, False)
 set_requires_grad(model.S2, False)
 
-learningrate = 0.0005
+learningrate = 0.0001
 #loss functions and optimizers
 criterionL1 = torch.nn.MSELoss('none')
 optimizerL1 = torch.optim.Adam(list(model.L1.parameters()) + list(model.cpm1.parameters()) + list(model.cpm1prlu.parameters()) + list(model.cpm2.parameters()) + list(model.cpm2prlu.parameters()), lr=learningrate)
