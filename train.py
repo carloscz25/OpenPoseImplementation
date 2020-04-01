@@ -8,6 +8,13 @@ import pickle
 import random
 import psutil
 
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+
+
+
 writer = SummaryWriter()
 
 datasetnames = ['coco', 'mpii']
@@ -28,6 +35,7 @@ def add_scalar_max_min(name, step, arr):
     writer.add_scalars(name, d, step)
 
 model = OpenPoseModel()
+model = model.to(device)
 
 #monitoring part
 mods = {}
@@ -93,7 +101,7 @@ def collatefn(o):
             oa.append(torch.stack(l,0))
     return oa, ext
 
-batchsize = 16
+batchsize = 8
 paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
 paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datasets/mpii/images']
@@ -103,11 +111,14 @@ dataloader = torch.utils.data.DataLoader(dataset, batchsize, collate_fn=collatef
 singlebatch = None
 for step, batch in enumerate(dataloader):
     # if singlebatch==None:
-    singlebatch = batch
-    ([impreprocessed, Starget, Ltarget, original_image_dim], [ann, image_url]) = singlebatch
+    ([impreprocessed, Starget, Ltarget, original_image_dim], [ann, image_url]) = batch
 
     Ltarget = Ltarget.float()
     Starget = Starget.float()
+
+    Ltarget = Ltarget.to(device)
+    Starget = Starget.to(device)
+    impreprocessed = impreprocessed.to(device)
 
 
     F = model.F(impreprocessed)
@@ -262,12 +273,13 @@ for step, batch in enumerate(dataloader):
     writer.add_scalar('free', mem.free, step)
 
     #adding images
-    if step % 100 == 0:
-        for i in range(16):
-            original_image = cv2.imread(image_url[i])
-            im1 = getimagewithpartheatmaps(original_image, S[i])
-            im1t = torch.from_numpy(im1)
-            writer.add_image('im'+str(i), im1t, step, dataformats='HWC')
+    if step % 1000 == 0:
+        if step > 0:
+            for i in range(batchsize):
+                original_image = cv2.imread(image_url[i])
+                im1 = getimagewithpartheatmaps(original_image, S[i])
+                im1t = torch.from_numpy(im1)
+                writer.add_image('im'+str(i), im1t, step, dataformats='HWC')
 
     # monitor_gradient_mean(writer, mods, ['L1','L2','L3','L4','L5','S1','S1'], step)
     # monitor_parameter_mean(writer, mods, ['L1', 'L2', 'L3', 'L4', 'L5', 'S1', 'S1'], step)
