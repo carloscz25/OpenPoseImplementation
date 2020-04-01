@@ -6,7 +6,7 @@ from  torch.utils.tensorboard import SummaryWriter
 from monitoring import *
 import pickle
 import random
-import psutil
+# import psutil
 
 if torch.cuda.is_available():
     device = torch.device("cuda")
@@ -268,9 +268,9 @@ for step, batch in enumerate(dataloader):
     writer.add_scalar('S', overallLossS, step)
 
     #checking memory
-    mem = psutil.virtual_memory()
-    writer.add_scalar('used', mem.used, step)
-    writer.add_scalar('free', mem.free, step)
+    # mem = psutil.virtual_memory()
+    # writer.add_scalar('used', mem.used, step)
+    # writer.add_scalar('free', mem.free, step)
 
     #adding images
     if step % 1000 == 0:
