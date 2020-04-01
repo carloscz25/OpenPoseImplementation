@@ -68,7 +68,7 @@ set_requires_grad(model.L5, False)
 set_requires_grad(model.S1, False)
 set_requires_grad(model.S2, False)
 
-learningrate = 0.0001
+learningrate = 0.0005
 #loss functions and optimizers
 criterionL1 = torch.nn.MSELoss('none')
 optimizerL1 = torch.optim.Adam(list(model.L1.parameters()) + list(model.cpm1.parameters()) + list(model.cpm1prlu.parameters()) + list(model.cpm2.parameters()) + list(model.cpm2prlu.parameters()), lr=learningrate)
@@ -102,6 +102,7 @@ def collatefn(o):
     return oa, ext
 
 batchsize = 32
+epochs = 10
 paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
 paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datasets/mpii/images']
@@ -109,177 +110,178 @@ paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datas
 dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['cloud'], ['train.json', 'trainmpii.json'])
 dataloader = torch.utils.data.DataLoader(dataset, batchsize, collate_fn=collatefn)
 singlebatch = None
-for step, batch in enumerate(dataloader):
-    # if singlebatch==None:
-    ([impreprocessed, Starget, Ltarget, original_image_dim], [ann, image_url]) = batch
+for i in range(epochs):
+    for step, batch in enumerate(dataloader):
+        # if singlebatch==None:
+        ([impreprocessed, Starget, Ltarget, original_image_dim], [ann, image_url]) = batch
 
-    Ltarget = Ltarget.float()
-    Starget = Starget.float()
+        Ltarget = Ltarget.float()
+        Starget = Starget.float()
 
-    Ltarget = Ltarget.to(device)
-    Starget = Starget.to(device)
-    impreprocessed = impreprocessed.to(device)
-
-
-    F = model.F(impreprocessed)
-
-    # add_scalar_max_min('F', step, F)
+        Ltarget = Ltarget.to(device)
+        Starget = Starget.to(device)
+        impreprocessed = impreprocessed.to(device)
 
 
-    #CPM part
-    set_requires_grad(model.cpm1, True)
-    set_requires_grad(model.cpm1prlu, True)
-    set_requires_grad(model.cpm2, True)
-    set_requires_grad(model.cpm2prlu, True)
-    set_requires_grad(model.L1, True)
-    F = model.cpm1(F)
-    F = model.cpm1prlu(F)
-    F = model.cpm2(F)
-    F = model.cpm2prlu(F)
-    F = F.detach()
+        F = model.F(impreprocessed)
 
-    nsubruns=1
-    #run L stages
-    #stage1
-    for i in range(nsubruns):
-        model.L1.zero_grad()
+        # add_scalar_max_min('F', step, F)
+
+
+        #CPM part
+        set_requires_grad(model.cpm1, True)
+        set_requires_grad(model.cpm1prlu, True)
+        set_requires_grad(model.cpm2, True)
+        set_requires_grad(model.cpm2prlu, True)
+        set_requires_grad(model.L1, True)
+        F = model.cpm1(F)
+        F = model.cpm1prlu(F)
+        F = model.cpm2(F)
+        F = model.cpm2prlu(F)
+        F = F.detach()
+
+        nsubruns=1
+        #run L stages
+        #stage1
+        for i in range(nsubruns):
+            model.L1.zero_grad()
+            L = model.L1(F)
+            lossL1 = criterionL1(L, Ltarget)
+            lossL1.backward()
+            optimizerL1.step()
         L = model.L1(F)
-        lossL1 = criterionL1(L, Ltarget)
-        lossL1.backward()
-        optimizerL1.step()
-    L = model.L1(F)
-    L = L.detach()
-    set_requires_grad(model.cpm1, False)
-    set_requires_grad(model.cpm1prlu, False)
-    set_requires_grad(model.cpm2, False)
-    set_requires_grad(model.cpm2prlu, False)
-    set_requires_grad(model.L1, False)
+        L = L.detach()
+        set_requires_grad(model.cpm1, False)
+        set_requires_grad(model.cpm1prlu, False)
+        set_requires_grad(model.cpm2, False)
+        set_requires_grad(model.cpm2prlu, False)
+        set_requires_grad(model.L1, False)
 
-    set_requires_grad(model.L2, True)
-    for i in range(nsubruns):
-        model.L2.zero_grad()
+        set_requires_grad(model.L2, True)
+        for i in range(nsubruns):
+            model.L2.zero_grad()
+            Linput = torch.cat((F, L), 1)
+            L = model.L2(Linput)
+            lossL2 = criterionL2(L, Ltarget)
+            lossL2.backward()
+            optimizerL2.step()
+
         Linput = torch.cat((F, L), 1)
         L = model.L2(Linput)
-        lossL2 = criterionL2(L, Ltarget)
-        lossL2.backward()
-        optimizerL2.step()
+        L = L.detach()
+        set_requires_grad(model.L2, False)
 
-    Linput = torch.cat((F, L), 1)
-    L = model.L2(Linput)
-    L = L.detach()
-    set_requires_grad(model.L2, False)
-
-    set_requires_grad(model.L3, True)
-    for i in range(nsubruns):
-        model.L3.zero_grad()
+        set_requires_grad(model.L3, True)
+        for i in range(nsubruns):
+            model.L3.zero_grad()
+            Linput = torch.cat((F, L), 1)
+            L = model.L3(Linput)
+            lossL3 = criterionL3(L, Ltarget)
+            lossL3.backward()
+            optimizerL3.step()
         Linput = torch.cat((F, L), 1)
         L = model.L3(Linput)
-        lossL3 = criterionL3(L, Ltarget)
-        lossL3.backward()
-        optimizerL3.step()
-    Linput = torch.cat((F, L), 1)
-    L = model.L3(Linput)
-    L = L.detach()
-    set_requires_grad(model.L3, False)
+        L = L.detach()
+        set_requires_grad(model.L3, False)
 
-    set_requires_grad(model.L4, True)
-    for i in range(nsubruns):
+        set_requires_grad(model.L4, True)
+        for i in range(nsubruns):
+            Linput = torch.cat((F, L), 1)
+            L = model.L4(Linput)
+            lossL4 = criterionL4(L, Ltarget)
+            lossL4.backward()
+            optimizerL4.step()
+            model.L4.zero_grad()
         Linput = torch.cat((F, L), 1)
         L = model.L4(Linput)
-        lossL4 = criterionL4(L, Ltarget)
-        lossL4.backward()
-        optimizerL4.step()
-        model.L4.zero_grad()
-    Linput = torch.cat((F, L), 1)
-    L = model.L4(Linput)
-    L = L.detach()
-    set_requires_grad(model.L4, False)
+        L = L.detach()
+        set_requires_grad(model.L4, False)
 
-    set_requires_grad(model.L5, True)
-    for i in range(nsubruns):
+        set_requires_grad(model.L5, True)
+        for i in range(nsubruns):
+            Linput = torch.cat((F, L), 1)
+            L = model.L5(Linput)
+            lossL5 = criterionL5(L, Ltarget)
+            lossL5.backward()
+            optimizerL5.step()
+            model.L5.zero_grad()
         Linput = torch.cat((F, L), 1)
         L = model.L5(Linput)
-        lossL5 = criterionL5(L, Ltarget)
-        lossL5.backward()
-        optimizerL5.step()
-        model.L5.zero_grad()
-    Linput = torch.cat((F, L), 1)
-    L = model.L5(Linput)
-    L = L.detach()
-    set_requires_grad(model.L5, False)
+        L = L.detach()
+        set_requires_grad(model.L5, False)
 
-    # S stages
-    # stage1
-    set_requires_grad(model.S1, True)
-    for i in range(nsubruns):
+        # S stages
+        # stage1
+        set_requires_grad(model.S1, True)
+        for i in range(nsubruns):
+            Sinput = torch.cat((F, L), 1)
+            S = model.S1(Sinput)
+            lossS1 = criterionS1(S, Starget)
+            lossS1.backward()
+            optimizerS1.step()
+            model.S1.zero_grad()
         Sinput = torch.cat((F, L), 1)
         S = model.S1(Sinput)
-        lossS1 = criterionS1(S, Starget)
-        lossS1.backward()
-        optimizerS1.step()
-        model.S1.zero_grad()
-    Sinput = torch.cat((F, L), 1)
-    S = model.S1(Sinput)
-    S = S.detach()
-    set_requires_grad(model.S1, False)
+        S = S.detach()
+        set_requires_grad(model.S1, False)
 
-    #stage2
-    set_requires_grad(model.S2, True)
-    for i in range(nsubruns):
+        #stage2
+        set_requires_grad(model.S2, True)
+        for i in range(nsubruns):
+            Sinput = torch.cat((F, L, S), 1)
+            S = model.S2(Sinput)
+            lossS2 = criterionS1(S, Starget)
+            if i < (nsubruns-1):
+                lossS2.backward()
+            else:
+                lossS2.backward()
+            optimizerS2.step()
+            model.S2.zero_grad()
         Sinput = torch.cat((F, L, S), 1)
         S = model.S2(Sinput)
-        lossS2 = criterionS1(S, Starget)
-        if i < (nsubruns-1):
-            lossS2.backward()
-        else:
-            lossS2.backward()
-        optimizerS2.step()
-        model.S2.zero_grad()
-    Sinput = torch.cat((F, L, S), 1)
-    S = model.S2(Sinput)
-    S = S.detach()
-    set_requires_grad(model.S2, False)
+        S = S.detach()
+        set_requires_grad(model.S2, False)
 
-    # S, L, F = None, None, None
+        # S, L, F = None, None, None
 
 
 
-    model.zero_grad()
+        model.zero_grad()
 
-    overallLossL =  lossL1 + lossL2 + lossL3 + lossL4 + lossL5
-    overallLossS =  lossS1 + lossS2
+        overallLossL =  lossL1 + lossL2 + lossL3 + lossL4 + lossL5
+        overallLossS =  lossS1 + lossS2
 
-    print(step)
-    print('L', overallLossL)
-    print('S', overallLossS)
+        print(step)
+        print('L', overallLossL)
+        print('S', overallLossS)
 
-    if (step % 50)==0:
-        if step > 0:
-            torch.save(model.state_dict(), 'checkpoints/current.chp')
+        if (step % 50)==0:
+            if step > 0:
+                torch.save(model.state_dict(), 'checkpoints/current.chp')
 
-    #statistics form trainin monitorization
+        #statistics form trainin monitorization
 
-    #main
-    # scs={}
-    # scs['L'] = overallLossL
-    # scs['S'] = overallLossSd
-    # writer.add_scalars('main',scs, step)
-    writer.add_scalar('L', overallLossL, step)
-    writer.add_scalar('S', overallLossS, step)
+        #main
+        # scs={}
+        # scs['L'] = overallLossL
+        # scs['S'] = overallLossSd
+        # writer.add_scalars('main',scs, step)
+        writer.add_scalar('L'+str(i), overallLossL, step)
+        writer.add_scalar('S'+str(i), overallLossS, step)
 
-    #checking memory
-    # mem = psutil.virtual_memory()
-    # writer.add_scalar('used', mem.used, step)
-    # writer.add_scalar('free', mem.free, step)
+        #checking memory
+        # mem = psutil.virtual_memory()
+        # writer.add_scalar('used', mem.used, step)
+        # writer.add_scalar('free', mem.free, step)
 
-    #adding images
-    if step % 1000 == 0:
-        if step > 0:
-            for i in range(batchsize):
-                original_image = cv2.imread(image_url[i])
-                im1 = getimagewithpartheatmaps(original_image, S[i])
-                im1t = torch.from_numpy(im1)
-                writer.add_image('im'+str(i), im1t, step, dataformats='HWC')
+        #adding images
+        if step % 1000 == 0:
+            if step > 0:
+                for i in range(batchsize):
+                    original_image = cv2.imread(image_url[i])
+                    im1 = getimagewithpartheatmaps(original_image, S[i])
+                    im1t = torch.from_numpy(im1)
+                    writer.add_image('im'+str(i), im1t, step, dataformats='HWC')
 
     # monitor_gradient_mean(writer, mods, ['L1','L2','L3','L4','L5','S1','S1'], step)
     # monitor_parameter_mean(writer, mods, ['L1', 'L2', 'L3', 'L4', 'L5', 'S1', 'S1'], step)
