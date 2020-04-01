@@ -273,7 +273,7 @@ for step, batch in enumerate(dataloader):
     writer.add_scalar('free', mem.free, step)
 
     #adding images
-    if step % 1000 == 0:
+    if step % 1000 == 0: 
         if step > 0:
             for i in range(batchsize):
                 original_image = cv2.imread(image_url[i])
