@@ -111,6 +111,7 @@ dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['cloud'], ['train.js
 dataloader = torch.utils.data.DataLoader(dataset, batchsize, collate_fn=collatefn)
 singlebatch = None
 for i in range(epochs):
+    print(i)
     for step, batch in enumerate(dataloader):
         # if singlebatch==None:
         ([impreprocessed, Starget, Ltarget, original_image_dim], [ann, image_url]) = batch
@@ -251,7 +252,7 @@ for i in range(epochs):
         overallLossL =  lossL1 + lossL2 + lossL3 + lossL4 + lossL5
         overallLossS =  lossS1 + lossS2
 
-        print(step)
+        print('epoch' + str(i) + 'step' + step)
         print('L', overallLossL)
         print('S', overallLossS)
 
@@ -266,8 +267,8 @@ for i in range(epochs):
         # scs['L'] = overallLossL
         # scs['S'] = overallLossSd
         # writer.add_scalars('main',scs, step)
-        writer.add_scalar('L'+str(i), overallLossL, step)
-        writer.add_scalar('S'+str(i), overallLossS, step)
+        # writer.add_scalar('L'+str(i), overallLossL, step)
+        # writer.add_scalar('S'+str(i), overallLossS, step)
 
         #checking memory
         # mem = psutil.virtual_memory()
