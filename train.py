@@ -252,7 +252,7 @@ for i in range(epochs):
         overallLossL =  lossL1 + lossL2 + lossL3 + lossL4 + lossL5
         overallLossS =  lossS1 + lossS2
 
-        print('epoch' + str(i) + 'step' + step)
+        print('epoch' + str(i) + 'step' + str(step))
         print('L', overallLossL)
         print('S', overallLossS)
 
