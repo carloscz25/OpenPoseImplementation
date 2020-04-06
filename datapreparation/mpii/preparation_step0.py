@@ -19,6 +19,7 @@ annotationspath = '/home/carlos/PycharmProjects/PublicDatasets/MPII/mpii_human_p
 
 mat2 = scipy.io.loadmat(annotationspath, struct_as_record=False)
 
+couter_imageswithannotations = 0
 
 imagenumber = mat2['RELEASE'][0,0].annolist.shape[1]
 for i in range(imagenumber):
@@ -35,11 +36,10 @@ for i in range(imagenumber):
     # im = cv2.imread(os.path.join(imageanns['imagepath'],imageurl(imageid, 'MPiiDataset')))
     # cv2.imshow('w', im)
     # cv2.waitKey(0)
-
+    image_has_annotations = False
     numberofpersons = mat2['RELEASE'][0,0].annolist[0,i].annorect.shape[1]
     for j in range(numberofpersons):
         persondict = {'id':j}
-        dictanns['annotations'].append(persondict)
         pointsstruct = mat2['RELEASE'][0,0].annolist[0,i].annorect[0,j]
         if (indexof(pointsstruct._fieldnames, 'x1')!=-1):
             headrectangle = [pointsstruct.x1[0,0],pointsstruct.y1[0,0],pointsstruct.x2[0,0],pointsstruct.y2[0,0]]
@@ -70,8 +70,14 @@ for i in range(imagenumber):
                 elif is_visible == -1:
                     is_visible = 0
 
+                #correction of the head point (upper neck in mpii) acording to
+                #https://stackoverflow.com/questions/59772847/mpii-pose-estimation-dataset-visibility-flag-not-present
+                if id == 8:
+                    is_visible = 2
+
                 points[id] = (x,y,is_visible)
-            lp = np.zeros((36), dtype=np.uint16)
+            lenlp = len(mappingtable * 3)
+            lp = np.zeros((lenlp), dtype=np.uint16)
 
             for k in points.keys():
                 mapped_k = getpartindex(3,0,k)
@@ -91,6 +97,13 @@ for i in range(imagenumber):
             persondict['keypoints'] = lp.tolist()
             persondict['bbox'] = bbx
             persondict['num_keypoints'] = int(num_keypoints)
+            if num_keypoints > 0:
+                dictanns['annotations'].append(persondict)
+                image_has_annotations = True
+    if image_has_annotations:
+        couter_imageswithannotations += 1
+    else:
+        del imageanns[imageid]
     print('image n#' + str(i))
 print('dumping...')
 # json.dump(imageanns, open('/home/carlos/PycharmProjects/OpenPose/trainmpii.json','w'))
@@ -99,4 +112,5 @@ with open('/home/carlos/PycharmProjects/OpenPose/trainmpii.json', 'w') as f:
     f.write(jsonstr)
 f.close()
 print('done!')
+print('imported ' + str(couter_imageswithannotations) + 'images')
 y=2

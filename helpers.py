@@ -35,6 +35,7 @@ mappingtable.append([8,'right hip',12, 2])
 mappingtable.append([9,'right shoulder',6, 12])
 mappingtable.append([10,'right elbow',8, 11])
 mappingtable.append([11,'right wrist',10, 10])
+# mappingtable.append([12,'head',0, 8]) #i don't like the correspondence between coco and mpii
 
 common_bodyparts = [i[1] for i in mappingtable]
 common_skeleton = [[1,2],[2,3],[3,4],[4,5],[5,6],[7,8],[8,9],[9,10],[10,11],[11,12]]

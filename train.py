@@ -101,13 +101,13 @@ def collatefn(o):
             oa.append(torch.stack(l,0))
     return oa, ext
 
-batchsize = 32
+batchsize = 16
 epochs = 10
 paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
 paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datasets/mpii/images']
 
-dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['cloud'], ['train.json', 'trainmpii.json'])
+dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['cloud'], ['traincoco.json', 'trainmpii.json'])
 dataloader = torch.utils.data.DataLoader(dataset, batchsize, collate_fn=collatefn)
 singlebatch = None
 for i in range(epochs):
@@ -147,6 +147,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             model.L1.zero_grad()
             L = model.L1(F)
+            L[Ltarget==0] = 0
             lossL1 = criterionL1(L, Ltarget)
             lossL1.backward()
             optimizerL1.step()
@@ -163,6 +164,7 @@ for i in range(epochs):
             model.L2.zero_grad()
             Linput = torch.cat((F, L), 1)
             L = model.L2(Linput)
+            L[Ltarget == 0] = 0
             lossL2 = criterionL2(L, Ltarget)
             lossL2.backward()
             optimizerL2.step()
@@ -177,6 +179,7 @@ for i in range(epochs):
             model.L3.zero_grad()
             Linput = torch.cat((F, L), 1)
             L = model.L3(Linput)
+            L[Ltarget == 0] = 0
             lossL3 = criterionL3(L, Ltarget)
             lossL3.backward()
             optimizerL3.step()
@@ -189,6 +192,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Linput = torch.cat((F, L), 1)
             L = model.L4(Linput)
+            L[Ltarget == 0] = 0
             lossL4 = criterionL4(L, Ltarget)
             lossL4.backward()
             optimizerL4.step()
@@ -202,6 +206,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Linput = torch.cat((F, L), 1)
             L = model.L5(Linput)
+            L[Ltarget == 0] = 0
             lossL5 = criterionL5(L, Ltarget)
             lossL5.backward()
             optimizerL5.step()
@@ -217,6 +222,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Sinput = torch.cat((F, L), 1)
             S = model.S1(Sinput)
+            S[Starget == 0] = 0
             lossS1 = criterionS1(S, Starget)
             lossS1.backward()
             optimizerS1.step()
@@ -231,6 +237,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Sinput = torch.cat((F, L, S), 1)
             S = model.S2(Sinput)
+            S[Starget == 0] = 0
             lossS2 = criterionS1(S, Starget)
             if i < (nsubruns-1):
                 lossS2.backward()
@@ -262,21 +269,13 @@ for i in range(epochs):
 
         #statistics form trainin monitorization
 
-        #main
-        # scs={}
-        # scs['L'] = overallLossL
-        # scs['S'] = overallLossSd
-        # writer.add_scalars('main',scs, step)
-        # writer.add_scalar('L'+str(i), overallLossL, step)
-        # writer.add_scalar('S'+str(i), overallLossS, step)
 
-        #checking memory
-        # mem = psutil.virtual_memory()
-        # writer.add_scalar('used', mem.used, step)
-        # writer.add_scalar('free', mem.free, step)
+        writer.add_scalar('L'+str(i), overallLossL, step)
+        writer.add_scalar('S'+str(i), overallLossS, step)
+
 
         #adding images
-        if step % 1000 == 0:
+        if step % 100 == 0:
             if step > 0:
                 for i in range(batchsize):
                     original_image = cv2.imread(image_url[i])
@@ -284,35 +283,7 @@ for i in range(epochs):
                     im1t = torch.from_numpy(im1)
                     writer.add_image('im'+str(i), im1t, step, dataformats='HWC')
 
-    # monitor_gradient_mean(writer, mods, ['L1','L2','L3','L4','L5','S1','S1'], step)
-    # monitor_parameter_mean(writer, mods, ['L1', 'L2', 'L3', 'L4', 'L5', 'S1', 'S1'], step)
 
-    # monitor_gradient_shift(mods, ['L3','L4', 'L5','S1','S2'], step, 'gradientsmonitoring.grad')
-
-
-    # add_scalars_for_modname(mods, '_F_', step)
-    # add_scalars_for_modname(mods, '_cpm', step)
-    # add_scalars_for_modname(mods, '_L1_', step)
-    # add_scalars_for_modname(mods, '_L2_', step)
-    # add_scalars_for_modname(mods, '_L3_', step)
-    # add_scalars_for_modname(mods, '_L4_', step)
-    # add_scalars_for_modname(mods, '_L5_', step)
-    # add_scalars_for_modname(mods, '_S1_', step)
-    # add_scalars_for_modname(mods, '_S2_', step)
-
-
-
-
-
-    #monitorizando provisionalmente
-    # annadj = adjustannotationpoints(ann[0], (28,28), original_image_dim[0])
-    # imres = getimagewithdisplayedannotations(cv2.imread(image_url[0]), annadj)
-    # cv2.imshow('w', imres)
-    # cv2.waitKey(0)
-
-    # im = drawSvsStarget(S, Starget)
-    # cv2.imshow('w', im)
-    # cv2.waitKey(0)
 
 
 

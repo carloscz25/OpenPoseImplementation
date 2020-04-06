@@ -25,12 +25,20 @@ class OpenPoseDataset(IterableDataset):
         self.imagepaths = imagepaths
         self.annotationpaths = annotationpaths
         self.annotations = {}
-        self.annotationiterators = {}
         self.training_inference = training_inference
+        #initializing cursors
+        self.datasetcursors = {}
+        self.datasetlengths = {}
+        self.datasetkeys = {}
 
         for i, path in enumerate(self.annotationpaths):
-            self.annotations[self.datasetnames[i]] = json.loads(open(path,'r').read())
-            self.annotationiterators[self.datasetnames[i]] = iter(self.annotations[self.datasetnames[i]])
+            annotations = json.loads(open(path,'r').read())
+            self.annotations[self.datasetnames[i]] = annotations
+            self.datasetlengths[self.datasetnames[i]] = len(annotations)
+            self.datasetcursors[self.datasetnames[i]] = 0
+            self.datasetkeys[self.datasetnames[i]] = list(annotations.keys())
+
+
 
     def imageurl(self, datasetname, image_id):
         if (datasetname == 'coco'):
@@ -65,29 +73,23 @@ class OpenPoseDataset(IterableDataset):
 
         from random import random
 
-        rand = random()
-
-        acc = 0
-        datasetname = None
-        imagepath = None
-        iterator = None
-        for i, k in enumerate(self.annotationiterators.keys()):
+        rand, acc = random(), 0
+        for i, k in enumerate(self.datasetnames):
             acc += self.weights[i]
             if rand < acc:
-                iterator = self.annotationiterators[k]
                 datasetname = self.datasetnames[i]
                 imagepath = self.imagepaths[i]
                 break
-
-
-
-
         esvalido = False
         while (esvalido == False):
-            image_id = next(iterator)
+            image_id = self.datasetkeys[datasetname][self.datasetcursors[datasetname]]
+            self.datasetcursors[datasetname] += 1
+            if self.datasetcursors[datasetname] == self.datasetlengths[datasetname]:
+                self.datasetcursors[datasetname] = 0
             if (image_id.isdigit()==False):
                 continue
-            ann = self.annotations[datasetname][image_id]
+            else:
+                ann = self.annotations[datasetname][image_id]
             try:
                 for a in ann['annotations']:
                     b = a['bbox']
@@ -98,6 +100,37 @@ class OpenPoseDataset(IterableDataset):
                     esvalido = False
             except:
                     pass
+
+
+        # acc = 0
+        # datasetname = None
+        # imagepath = None
+        # iterator = None
+        # for i, k in enumerate(self.annotationiterators.keys()):
+        #     acc += self.weights[i]
+        #     if rand < acc:
+        #         iterator = self.annotationiterators[k]
+        #         datasetname = self.datasetnames[i]
+        #         imagepath = self.imagepaths[i]
+        #         break
+        #
+        #
+        # esvalido = False
+        # while (esvalido == False):
+        #     image_id = next(iterator)
+        #     if (image_id.isdigit()==False):
+        #         continue
+        #     ann = self.annotations[datasetname][image_id]
+        #     try:
+        #         for a in ann['annotations']:
+        #             b = a['bbox']
+        #         esvalido = True
+        #         image_url = os.path.join(imagepath, self.imageurl(datasetname, image_id))
+        #         im = cv2.imread(image_url)
+        #         if (im ==None):
+        #             esvalido = False
+        #     except:
+        #             pass
 
         original_image_dim = im.shape
 
