@@ -11,7 +11,7 @@ skeleton = [[16, 14], [14, 12], [17, 15], [15, 13], [12, 13], [6, 12], [7, 13], 
 
 
 imageanns = {'source':'CocoDataset'}
-imageanns['imagepath'] = '/home/carlos/PycharmProjects/PublicDatasets/Coco2/train2017'
+imageanns['imagepath'] = '/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017'
 imageanns['imagenamelen'] = 12
 
 with open(annotationpath, 'r') as f:

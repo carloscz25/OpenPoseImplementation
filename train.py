@@ -68,23 +68,23 @@ set_requires_grad(model.L5, False)
 set_requires_grad(model.S1, False)
 set_requires_grad(model.S2, False)
 
-learningrate = 0.0001
+learningrate = 0.001
 #loss functions and optimizers
 criterionL1 = torch.nn.MSELoss('none')
-optimizerL1 = torch.optim.Adam(list(model.L1.parameters()) + list(model.cpm1.parameters()) + list(model.cpm1prlu.parameters()) + list(model.cpm2.parameters()) + list(model.cpm2prlu.parameters()), lr=learningrate)
+optimizerL1 = torch.optim.SGD(list(model.L1.parameters()) + list(model.cpm1.parameters()) + list(model.cpm1prlu.parameters()) + list(model.cpm2.parameters()) + list(model.cpm2prlu.parameters()), lr=learningrate)
 # optimizerL1 = torch.optim.Adam(list(model.L1.parameters()), lr=learningrate)
 criterionL2 = torch.nn.MSELoss('none')
-optimizerL2 = torch.optim.Adam(list(model.L2.parameters()), lr=learningrate)
+optimizerL2 = torch.optim.SGD(list(model.L2.parameters()), lr=learningrate)
 criterionL3 = torch.nn.MSELoss('none')
-optimizerL3 = torch.optim.Adam(list(model.L3.parameters()), lr=learningrate)
+optimizerL3 = torch.optim.SGD(list(model.L3.parameters()), lr=learningrate)
 criterionL4 = torch.nn.MSELoss('none')
-optimizerL4 = torch.optim.Adam(list(model.L4.parameters()), lr=learningrate)
+optimizerL4 = torch.optim.SGD(list(model.L4.parameters()), lr=learningrate)
 criterionL5 = torch.nn.MSELoss('none')
-optimizerL5 = torch.optim.Adam(list(model.L5.parameters()), lr=learningrate)
+optimizerL5 = torch.optim.SGD(list(model.L5.parameters()), lr=learningrate)
 criterionS1 = torch.nn.MSELoss('none')
-optimizerS1 = torch.optim.Adam(list(model.S1.parameters()), lr=learningrate)
+optimizerS1 = torch.optim.SGD(list(model.S1.parameters()), lr=learningrate)
 criterionS2 = torch.nn.MSELoss('none')
-optimizerS2 = torch.optim.Adam(list(model.S2.parameters()), lr=learningrate)
+optimizerS2 = torch.optim.SGD(list(model.S2.parameters()), lr=learningrate)
 
 
 def collatefn(o):
@@ -101,7 +101,7 @@ def collatefn(o):
             oa.append(torch.stack(l,0))
     return oa, ext
 
-batchsize = 16
+batchsize = 32
 epochs = 10
 paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
