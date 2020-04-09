@@ -91,7 +91,7 @@ def collatefn(o):
             oa.append(torch.stack(l,0))
     return oa, ext
 
-batchsize = 64
+batchsize = 8
 epochs = 10
 paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
@@ -257,8 +257,8 @@ for i in range(epochs):
         #statistics form trainin monitorization
 
 
-        writer.add_scalar('L'+str(i), overallLossL, step)
-        writer.add_scalar('S'+str(i), overallLossS, step)
+        writer.add_scalar('L'+str(i), overallLossL.item(), step)
+        writer.add_scalar('S'+str(i), overallLossS.item(), step)
 
 
         #adding images
