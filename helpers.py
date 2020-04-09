@@ -35,6 +35,22 @@ mappingtable.append([8,'right hip',12, 2])
 mappingtable.append([9,'right shoulder',6, 12])
 mappingtable.append([10,'right elbow',8, 11])
 mappingtable.append([11,'right wrist',10, 10])
+
+partcolors = np.zeros((12,3), np.uint8)
+partcolors[0] = (255,0,0)
+partcolors[1] = (255,127,0)
+partcolors[2] = (255,255,0)
+partcolors[3] = (127,255,0)
+partcolors[4] = (0,255,0)
+partcolors[5] = (0,255,127)
+partcolors[6] = (0,255,255)
+partcolors[7] = (0,127,255)
+partcolors[8] = (0,0,255)
+partcolors[9] = (127,0,255)
+partcolors[10] = (255,0,255)
+partcolors[11] = (255,0,127)
+
+
 # mappingtable.append([12,'head',0, 8]) #i don't like the correspondence between coco and mpii
 
 common_bodyparts = [i[1] for i in mappingtable]
@@ -72,8 +88,9 @@ def vectormodule(vector):
 def getimagewithpartheatmaps(im, S):
     '''im and S must have same width/height'''
     S3 = np.zeros((im.shape[0], im.shape[1], 3), np.uint8)
-    color = [255,255,0]
+
     for i in range(len(S)):
+        color = partcolors[i]
         for y in range(len(S[i])):
             for x in range(len(S[i][y])):
                 yc = int(y*(im.shape[0]/S[i].shape[0]))
@@ -83,9 +100,9 @@ def getimagewithpartheatmaps(im, S):
                 S3[yc,xc,0] = int(color[0] * S[i,y,x])
                 S3[yc, xc, 1] = int(color[1] * S[i, y, x])
                 S3[yc, xc, 2] = int(color[2] * S[i, y, x])
-                if S3[yc,xc,0]>=250:
+                if S3[yc,xc,0]>=240:
                     pause = True
-                    cv2.circle(S3, (xc,yc), 3, (255,255,0), 2)
+                    cv2.circle(S3, (xc,yc), 3, color, 2)
 
 
     im2 = np.copy(im)

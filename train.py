@@ -23,17 +23,7 @@ def set_requires_grad(model, truefalse):
     for p in model.parameters():
         p.requires_grad = truefalse
 
-
-
-
-
-
-def add_scalar_max_min(name, step, arr):
-    d = {}
-    d['max'] = torch.max(arr).item()
-    d['min'] = torch.min(arr).item()
-    writer.add_scalars(name, d, step)
-
+#avoid non labelled data to penalize positives
 model = OpenPoseModel()
 model = model.to(device)
 
@@ -68,10 +58,10 @@ set_requires_grad(model.L5, False)
 set_requires_grad(model.S1, False)
 set_requires_grad(model.S2, False)
 
-learningrate = 0.001
+learningrate = 0.0001
 #loss functions and optimizers
 criterionL1 = torch.nn.MSELoss('none')
-optimizerL1 = torch.optim.SGD(list(model.L1.parameters()) + list(model.cpm1.parameters()) + list(model.cpm1prlu.parameters()) + list(model.cpm2.parameters()) + list(model.cpm2prlu.parameters()), lr=learningrate)
+optimizerL1 = torch.optim.Adam(list(model.L1.parameters()) + list(model.cpm1.parameters()) + list(model.cpm1prlu.parameters()) + list(model.cpm2.parameters()) + list(model.cpm2prlu.parameters()), lr=learningrate)
 # optimizerL1 = torch.optim.Adam(list(model.L1.parameters()), lr=learningrate)
 criterionL2 = torch.nn.MSELoss('none')
 optimizerL2 = torch.optim.SGD(list(model.L2.parameters()), lr=learningrate)
@@ -101,7 +91,7 @@ def collatefn(o):
             oa.append(torch.stack(l,0))
     return oa, ext
 
-batchsize = 32
+batchsize = 64
 epochs = 10
 paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
@@ -126,9 +116,6 @@ for i in range(epochs):
 
         F = model.F(impreprocessed)
 
-        # add_scalar_max_min('F', step, F)
-
-
         #CPM part
         set_requires_grad(model.cpm1, True)
         set_requires_grad(model.cpm1prlu, True)
@@ -147,7 +134,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             model.L1.zero_grad()
             L = model.L1(F)
-            L[Ltarget==0] = 0
+            # L[Ltarget==0] = 0
             lossL1 = criterionL1(L, Ltarget)
             lossL1.backward()
             optimizerL1.step()
@@ -164,7 +151,7 @@ for i in range(epochs):
             model.L2.zero_grad()
             Linput = torch.cat((F, L), 1)
             L = model.L2(Linput)
-            L[Ltarget == 0] = 0
+            # L[Ltarget == 0] = 0
             lossL2 = criterionL2(L, Ltarget)
             lossL2.backward()
             optimizerL2.step()
@@ -179,7 +166,7 @@ for i in range(epochs):
             model.L3.zero_grad()
             Linput = torch.cat((F, L), 1)
             L = model.L3(Linput)
-            L[Ltarget == 0] = 0
+            # L[Ltarget == 0] = 0
             lossL3 = criterionL3(L, Ltarget)
             lossL3.backward()
             optimizerL3.step()
@@ -192,7 +179,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Linput = torch.cat((F, L), 1)
             L = model.L4(Linput)
-            L[Ltarget == 0] = 0
+            # L[Ltarget == 0] = 0
             lossL4 = criterionL4(L, Ltarget)
             lossL4.backward()
             optimizerL4.step()
@@ -206,7 +193,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Linput = torch.cat((F, L), 1)
             L = model.L5(Linput)
-            L[Ltarget == 0] = 0
+            # L[Ltarget == 0] = 0
             lossL5 = criterionL5(L, Ltarget)
             lossL5.backward()
             optimizerL5.step()
@@ -222,7 +209,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Sinput = torch.cat((F, L), 1)
             S = model.S1(Sinput)
-            S[Starget == 0] = 0
+            # S[Starget == 0] = 0
             lossS1 = criterionS1(S, Starget)
             lossS1.backward()
             optimizerS1.step()
@@ -237,7 +224,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Sinput = torch.cat((F, L, S), 1)
             S = model.S2(Sinput)
-            S[Starget == 0] = 0
+            # S[Starget == 0] = 0
             lossS2 = criterionS1(S, Starget)
             if i < (nsubruns-1):
                 lossS2.backward()

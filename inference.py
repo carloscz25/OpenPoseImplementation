@@ -9,7 +9,7 @@ from model import OpenPoseModel
 paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
 paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datasets/mpii/images']
-dataloader = DataLoader(OpenPoseDataset(['coco','mpii'], [0.9,0.1],paths['local'], ['train.json', 'trainmpii.json'], training_inference='inference'), batch_size=1)
+dataloader = DataLoader(OpenPoseDataset(['coco','mpii'], [0.9,0.1],paths['local'], ['traincoco.json', 'trainmpii.json'], training_inference='inference'), batch_size=1)
 
 model = OpenPoseModel()
 sd = torch.load(open('checkpoints/current.chp', 'rb'))
@@ -51,11 +51,11 @@ for step, (impreprocessed, annadjusted, ann, Starget, Ltarget, image_url, origin
     im1 = getimagewithpartheatmaps(original_image, S[index])
 
 
-    adjustannotationpoints(annadjusted, (28,28), original_image_dim.numpy()[0])
-    im = getimagewithdisplayedannotations(cv2.imread(image_url[0]), ann)
-
-    im2 = drawSvsStarget(S, Starget)
-    orig_im = cv2.imread(image_url[0])
+    # adjustannotationpoints(annadjusted, (28,28), original_image_dim.numpy()[0])
+    # im = getimagewithdisplayedannotations(cv2.imread(image_url[0]), ann)
+    #
+    # im2 = drawSvsStarget(S, Starget)
+    # orig_im = cv2.imread(image_url[0])
 
     # cv2.imshow('orig', orig_im)
     cv2.imshow('im1', im1)
