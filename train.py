@@ -64,17 +64,17 @@ criterionL1 = torch.nn.MSELoss('none')
 optimizerL1 = torch.optim.Adam(list(model.L1.parameters()) + list(model.cpm1.parameters()) + list(model.cpm1prlu.parameters()) + list(model.cpm2.parameters()) + list(model.cpm2prlu.parameters()), lr=learningrate)
 # optimizerL1 = torch.optim.Adam(list(model.L1.parameters()), lr=learningrate)
 criterionL2 = torch.nn.MSELoss('none')
-optimizerL2 = torch.optim.SGD(list(model.L2.parameters()), lr=learningrate)
+optimizerL2 = torch.optim.Adam(list(model.L2.parameters()), lr=learningrate)
 criterionL3 = torch.nn.MSELoss('none')
-optimizerL3 = torch.optim.SGD(list(model.L3.parameters()), lr=learningrate)
+optimizerL3 = torch.optim.Adam(list(model.L3.parameters()), lr=learningrate)
 criterionL4 = torch.nn.MSELoss('none')
-optimizerL4 = torch.optim.SGD(list(model.L4.parameters()), lr=learningrate)
+optimizerL4 = torch.optim.Adam(list(model.L4.parameters()), lr=learningrate)
 criterionL5 = torch.nn.MSELoss('none')
-optimizerL5 = torch.optim.SGD(list(model.L5.parameters()), lr=learningrate)
+optimizerL5 = torch.optim.Adam(list(model.L5.parameters()), lr=learningrate)
 criterionS1 = torch.nn.MSELoss('none')
-optimizerS1 = torch.optim.SGD(list(model.S1.parameters()), lr=learningrate)
+optimizerS1 = torch.optim.Adam(list(model.S1.parameters()), lr=learningrate)
 criterionS2 = torch.nn.MSELoss('none')
-optimizerS2 = torch.optim.SGD(list(model.S2.parameters()), lr=learningrate)
+optimizerS2 = torch.optim.Adam(list(model.S2.parameters()), lr=learningrate)
 
 
 def collatefn(o):
@@ -91,7 +91,7 @@ def collatefn(o):
             oa.append(torch.stack(l,0))
     return oa, ext
 
-batchsize = 8
+batchsize = 16
 epochs = 10
 paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
@@ -266,10 +266,12 @@ for i in range(epochs):
             if step > 0:
                 for i in range(batchsize):
                     original_image = cv2.imread(image_url[i])
-                    im1 = getimagewithpartheatmaps(original_image, S[i])
-                    im1t = torch.from_numpy(im1)
-                    writer.add_image('im'+str(i), im1t, step, dataformats='HWC')
-
+                    try:
+                        im1 = getimagewithpartheatmaps(original_image, S[i])
+                        im1t = torch.from_numpy(im1)
+                        writer.add_image('im'+str(i), im1t, step, dataformats='HWC')
+                    except:
+                        pass
 
 
 
