@@ -134,7 +134,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             model.L1.zero_grad()
             L = model.L1(F)
-            # L[Ltarget==0] = 0
+            L[Ltarget==0] = 0
             lossL1 = criterionL1(L, Ltarget)
             lossL1.backward()
             optimizerL1.step()
@@ -151,7 +151,7 @@ for i in range(epochs):
             model.L2.zero_grad()
             Linput = torch.cat((F, L), 1)
             L = model.L2(Linput)
-            # L[Ltarget == 0] = 0
+            L[Ltarget == 0] = 0
             lossL2 = criterionL2(L, Ltarget)
             lossL2.backward()
             optimizerL2.step()
@@ -166,7 +166,7 @@ for i in range(epochs):
             model.L3.zero_grad()
             Linput = torch.cat((F, L), 1)
             L = model.L3(Linput)
-            # L[Ltarget == 0] = 0
+            L[Ltarget == 0] = 0
             lossL3 = criterionL3(L, Ltarget)
             lossL3.backward()
             optimizerL3.step()
@@ -179,7 +179,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Linput = torch.cat((F, L), 1)
             L = model.L4(Linput)
-            # L[Ltarget == 0] = 0
+            L[Ltarget == 0] = 0
             lossL4 = criterionL4(L, Ltarget)
             lossL4.backward()
             optimizerL4.step()
@@ -193,7 +193,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Linput = torch.cat((F, L), 1)
             L = model.L5(Linput)
-            # L[Ltarget == 0] = 0
+            L[Ltarget == 0] = 0
             lossL5 = criterionL5(L, Ltarget)
             lossL5.backward()
             optimizerL5.step()
@@ -209,7 +209,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Sinput = torch.cat((F, L), 1)
             S = model.S1(Sinput)
-            # S[Starget == 0] = 0
+            S[Starget == 0] = 0
             lossS1 = criterionS1(S, Starget)
             lossS1.backward()
             optimizerS1.step()
@@ -224,7 +224,7 @@ for i in range(epochs):
         for i in range(nsubruns):
             Sinput = torch.cat((F, L, S), 1)
             S = model.S2(Sinput)
-            # S[Starget == 0] = 0
+            S[Starget == 0] = 0
             lossS2 = criterionS1(S, Starget)
             if i < (nsubruns-1):
                 lossS2.backward()
