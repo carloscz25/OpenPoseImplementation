@@ -13,6 +13,8 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
+use_unlabelled_mask = False
+
 
 
 writer = SummaryWriter()
@@ -58,10 +60,11 @@ set_requires_grad(model.L5, False)
 set_requires_grad(model.S1, False)
 set_requires_grad(model.S2, False)
 
-learningrate = 0.0001
+learningrate = 0.00001
+learningrate = 1e-4
 #loss functions and optimizers
 criterionL1 = torch.nn.MSELoss('none')
-optimizerL1 = torch.optim.Adam(list(model.L1.parameters()) + list(model.cpm1.parameters()) + list(model.cpm1prlu.parameters()) + list(model.cpm2.parameters()) + list(model.cpm2prlu.parameters()), lr=learningrate)
+optimizerL1 = torch.optim.Adam(list(model.L1.parameters()) + list(model.cpm1.parameters()) + list(model.cpm1prlu.parameters()) + list(model.cpm2.parameters()) + list(model.cpm2prlu.parameters()) + list(model.F.parameters()), lr=learningrate)
 # optimizerL1 = torch.optim.Adam(list(model.L1.parameters()), lr=learningrate)
 criterionL2 = torch.nn.MSELoss('none')
 optimizerL2 = torch.optim.Adam(list(model.L2.parameters()), lr=learningrate)
@@ -75,6 +78,19 @@ criterionS1 = torch.nn.MSELoss('none')
 optimizerS1 = torch.optim.Adam(list(model.S1.parameters()), lr=learningrate)
 criterionS2 = torch.nn.MSELoss('none')
 optimizerS2 = torch.optim.Adam(list(model.S2.parameters()), lr=learningrate)
+
+if os.path.exists('checkpoints/optimizers.chp'):
+    sd = pickle.load(open('checkpoints/optimizers.chp', 'rb'))
+    optimizerL1.load_state_dict(sd['L1'])
+    optimizerL2.load_state_dict(sd['L2'])
+    optimizerL3.load_state_dict(sd['L3'])
+    optimizerL4.load_state_dict(sd['L4'])
+    optimizerL5.load_state_dict(sd['L5'])
+    optimizerS1.load_state_dict(sd['S1'])
+    optimizerS2.load_state_dict(sd['S2'])
+else:
+    pass
+
 
 
 def collatefn(o):
@@ -91,13 +107,13 @@ def collatefn(o):
             oa.append(torch.stack(l,0))
     return oa, ext
 
-batchsize = 16
+batchsize = 4
 epochs = 10
 paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
 paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datasets/mpii/images']
 
-dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['cloud'], ['traincoco.json', 'trainmpii.json'])
+dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['local'], ['traincoco.json', 'trainmpii.json'])
 dataloader = torch.utils.data.DataLoader(dataset, batchsize, collate_fn=collatefn)
 singlebatch = None
 for i in range(epochs):
@@ -117,6 +133,7 @@ for i in range(epochs):
         F = model.F(impreprocessed)
 
         #CPM part
+        set_requires_grad(model.F, True)
         set_requires_grad(model.cpm1, True)
         set_requires_grad(model.cpm1prlu, True)
         set_requires_grad(model.cpm2, True)
@@ -132,9 +149,15 @@ for i in range(epochs):
         #run L stages
         #stage1
         for i in range(nsubruns):
+            model.F.zero_grad()
+            model.cpm1.zero_grad()
+            model.cpm1prlu.zero_grad()
+            model.cpm2.zero_grad()
+            model.cpm2prlu.zero_grad()
             model.L1.zero_grad()
             L = model.L1(F)
-            L[Ltarget==0] = 0
+            if use_unlabelled_mask == True:
+                L[Ltarget==0] = 0
             lossL1 = criterionL1(L, Ltarget)
             lossL1.backward()
             optimizerL1.step()
@@ -151,7 +174,8 @@ for i in range(epochs):
             model.L2.zero_grad()
             Linput = torch.cat((F, L), 1)
             L = model.L2(Linput)
-            L[Ltarget == 0] = 0
+            if use_unlabelled_mask == True:
+                L[Ltarget == 0] = 0
             lossL2 = criterionL2(L, Ltarget)
             lossL2.backward()
             optimizerL2.step()
@@ -166,7 +190,8 @@ for i in range(epochs):
             model.L3.zero_grad()
             Linput = torch.cat((F, L), 1)
             L = model.L3(Linput)
-            L[Ltarget == 0] = 0
+            if use_unlabelled_mask == True:
+                L[Ltarget == 0] = 0
             lossL3 = criterionL3(L, Ltarget)
             lossL3.backward()
             optimizerL3.step()
@@ -179,7 +204,8 @@ for i in range(epochs):
         for i in range(nsubruns):
             Linput = torch.cat((F, L), 1)
             L = model.L4(Linput)
-            L[Ltarget == 0] = 0
+            if use_unlabelled_mask == True:
+                L[Ltarget == 0] = 0
             lossL4 = criterionL4(L, Ltarget)
             lossL4.backward()
             optimizerL4.step()
@@ -193,7 +219,8 @@ for i in range(epochs):
         for i in range(nsubruns):
             Linput = torch.cat((F, L), 1)
             L = model.L5(Linput)
-            L[Ltarget == 0] = 0
+            if use_unlabelled_mask == True:
+                L[Ltarget == 0] = 0
             lossL5 = criterionL5(L, Ltarget)
             lossL5.backward()
             optimizerL5.step()
@@ -209,7 +236,8 @@ for i in range(epochs):
         for i in range(nsubruns):
             Sinput = torch.cat((F, L), 1)
             S = model.S1(Sinput)
-            S[Starget == 0] = 0
+            if use_unlabelled_mask == True:
+                S[Starget == 0] = 0
             lossS1 = criterionS1(S, Starget)
             lossS1.backward()
             optimizerS1.step()
@@ -224,7 +252,8 @@ for i in range(epochs):
         for i in range(nsubruns):
             Sinput = torch.cat((F, L, S), 1)
             S = model.S2(Sinput)
-            S[Starget == 0] = 0
+            if use_unlabelled_mask == True:
+                S[Starget == 0] = 0
             lossS2 = criterionS1(S, Starget)
             if i < (nsubruns-1):
                 lossS2.backward()
@@ -253,6 +282,16 @@ for i in range(epochs):
         if (step % 50)==0:
             if step > 0:
                 torch.save(model.state_dict(), 'checkpoints/current.chp')
+                optimizers = {}
+                optimizers['L1'] = optimizerL1.state_dict()
+                optimizers['L2'] = optimizerL2.state_dict()
+                optimizers['L3'] = optimizerL3.state_dict()
+                optimizers['L4'] = optimizerL4.state_dict()
+                optimizers['L5'] = optimizerL5.state_dict()
+                optimizers['S1'] = optimizerS1.state_dict()
+                optimizers['S2'] = optimizerS2.state_dict()
+                pickle.dump(optimizers, open('checkpoints/optimizers.chp','wb'))
+
 
         #statistics form trainin monitorization
 
@@ -263,11 +302,13 @@ for i in range(epochs):
 
         #adding images
         if step % 100 == 0:
-            if step > 0:
+            if step >= 0:
                 for i in range(batchsize):
                     original_image = cv2.imread(image_url[i])
                     try:
                         im1 = getimagewithpartheatmaps(original_image, S[i])
+                        # cv2.imshow('w', im1)
+                        # cv2.waitKey(0)
                         im1t = torch.from_numpy(im1)
                         writer.add_image('im'+str(i), im1t, step, dataformats='HWC')
                     except:

@@ -100,9 +100,10 @@ def getimagewithpartheatmaps(im, S):
                 S3[yc,xc,0] = int(color[0] * S[i,y,x])
                 S3[yc, xc, 1] = int(color[1] * S[i, y, x])
                 S3[yc, xc, 2] = int(color[2] * S[i, y, x])
-                if S3[yc,xc,0]>=240:
+                thresh = 220
+                if ((S3[yc,xc,0]>=thresh) | (S3[yc,xc,1]>=thresh) | (S3[yc,xc,2]>=thresh)) :
                     pause = True
-                    cv2.circle(S3, (xc,yc), 3, color, 2)
+                    cv2.circle(S3, (xc,yc), 3, (int(color[0]),int(color[1]),int(color[2])), 2)
 
 
     im2 = np.copy(im)

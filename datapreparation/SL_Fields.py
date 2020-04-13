@@ -35,10 +35,10 @@ def createconfidencemapsforpartdetection(imageshape, ann):
             if (kpi[2]==0): #if 1=not visible but annotated, if 2=visible and annotated
                 #if this value is 0, there's no valid annotation
                 continue
-            if (kpi[2]==1):
-                #we skip it aswell as it is not visible
-                continue
-            if (kpi[2] == 2):
+            # if (kpi[2]==1):
+            #     #we skip it aswell as it is not visible
+            #     continue
+            if ((kpi[2] == 2)|(kpi[2] == 1)):
                 disteval = 6
                 #annotation and image/map coords order differs so we need to assign 1->0 and 0->1
                 x0,y0, x1, y1 = kpi[0]-disteval, kpi[1]-disteval, kpi[0]+disteval, kpi[1]+disteval

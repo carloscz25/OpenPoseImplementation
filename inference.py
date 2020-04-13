@@ -6,19 +6,44 @@ from torch.utils.data import DataLoader
 from openposedataset import *
 from model import OpenPoseModel
 
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+
+
+def collatefn(o):
+
+    oa = []
+    ext = []
+    for r in range(len(o[0])):
+        l = []
+        for t in o:
+           l.append(t[r])
+        if r in (1,4):
+            ext.append(l)#dicts not allowed to be stacked as tensor
+        else:
+            oa.append(torch.stack(l,0))
+    return oa, ext
+
 paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
 paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datasets/mpii/images']
-dataloader = DataLoader(OpenPoseDataset(['coco','mpii'], [0.9,0.1],paths['local'], ['traincoco.json', 'trainmpii.json'], training_inference='inference'), batch_size=1)
+dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['local'], ['traincoco.json', 'trainmpii.json'])
+dataloader = torch.utils.data.DataLoader(dataset, 1, collate_fn=collatefn)
 
 model = OpenPoseModel()
+model.to(device)
 sd = torch.load(open('checkpoints/current.chp', 'rb'))
 model.load_state_dict(sd)
 model.eval()
 
-for step, (impreprocessed, annadjusted, ann, Starget, Ltarget, image_url, original_image_dim) in enumerate(dataloader):
+
+
+for step, ([impreprocessed, Starget, Ltarget, original_image_dim], [ann, image_url]) in enumerate(dataloader):
     Ltarget = Ltarget.float()
     Starget = Starget.float()
+    impreprocessed = impreprocessed.to(device)
     F = model.F(impreprocessed)
 
     # CPM part

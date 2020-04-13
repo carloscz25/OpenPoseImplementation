@@ -10,7 +10,7 @@ imagepath = '/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017'
 
 
 #load an image and its annotations from the prepared train.json/val.json
-jsondata = open('../train.json', 'r').read()
+jsondata = open('../traincoco.json', 'r').read()
 imageanns = json.loads(jsondata)
 for k in imageanns.keys():
     if k.isdigit()==False:
