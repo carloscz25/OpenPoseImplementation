@@ -15,8 +15,6 @@ else:
 
 use_unlabelled_mask = False
 
-
-
 writer = SummaryWriter()
 
 datasetnames = ['coco', 'mpii']
@@ -28,6 +26,10 @@ def set_requires_grad(model, truefalse):
 #avoid non labelled data to penalize positives
 model = OpenPoseModel()
 model = model.to(device)
+
+#preloading for monitoring
+d = {}
+allmodules(model, d, '')
 
 #monitoring part
 mods = {}
@@ -59,6 +61,8 @@ set_requires_grad(model.L4, False)
 set_requires_grad(model.L5, False)
 set_requires_grad(model.S1, False)
 set_requires_grad(model.S2, False)
+# set_requires_grad(model.S3, False)
+# set_requires_grad(model.S4, False)
 
 learningrate = 0.00001
 learningrate = 1e-4
@@ -78,6 +82,10 @@ criterionS1 = torch.nn.MSELoss('none')
 optimizerS1 = torch.optim.Adam(list(model.S1.parameters()), lr=learningrate)
 criterionS2 = torch.nn.MSELoss('none')
 optimizerS2 = torch.optim.Adam(list(model.S2.parameters()), lr=learningrate)
+# criterionS3 = torch.nn.MSELoss('none')
+# optimizerS3 = torch.optim.Adam(list(model.S3.parameters()), lr=learningrate)
+# criterionS4 = torch.nn.MSELoss('none')
+# optimizerS4 = torch.optim.Adam(list(model.S4.parameters()), lr=learningrate)
 
 if os.path.exists('checkpoints/optimizers.chp'):
     sd = pickle.load(open('checkpoints/optimizers.chp', 'rb'))
@@ -88,6 +96,8 @@ if os.path.exists('checkpoints/optimizers.chp'):
     optimizerL5.load_state_dict(sd['L5'])
     optimizerS1.load_state_dict(sd['S1'])
     optimizerS2.load_state_dict(sd['S2'])
+    # optimizerS3.load_state_dict(sd['S3'])
+    # optimizerS4.load_state_dict(sd['S4'])
 else:
     pass
 
@@ -113,13 +123,14 @@ paths = {}
 paths['local'] = ['/home/carlos/PycharmProjects/PublicDatasets/Coco/train2017','/home/carlos/PycharmProjects/PublicDatasets/MPII/images']
 paths['cloud'] = ['/mnt/disks/sdb/datasets/coco/train2017','/mnt/disks/sdb/datasets/mpii/images']
 
-dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['cloud'], ['traincoco.json', 'trainmpii.json'])
+dataset = OpenPoseDataset(['coco','mpii'], [0.9,0.1], paths['local'], ['traincoco.json', 'trainmpii.json'])
 dataloader = torch.utils.data.DataLoader(dataset, batchsize, collate_fn=collatefn)
 singlebatch = None
 for i in range(epochs):
     print(i)
     for step, batch in enumerate(dataloader):
         # if singlebatch==None:
+        #     singlebatch = batch
         ([impreprocessed, Starget, Ltarget, original_image_dim], [ann, image_url]) = batch
 
         Ltarget = Ltarget.float()
@@ -266,6 +277,44 @@ for i in range(epochs):
         S = S.detach()
         set_requires_grad(model.S2, False)
 
+        #stage3
+        # set_requires_grad(model.S3, True)
+        # for i in range(nsubruns):
+        #     Sinput = torch.cat((F, L, S), 1)
+        #     S = model.S3(Sinput)
+        #     if use_unlabelled_mask == True:
+        #         S[Starget == 0] = 0
+        #     lossS3 = criterionS3(S, Starget)
+        #     if i < (nsubruns - 1):
+        #         lossS3.backward()
+        #     else:
+        #         lossS3.backward()
+        #     optimizerS3.step()
+        #     model.S3.zero_grad()
+        # Sinput = torch.cat((F, L, S), 1)
+        # S = model.S3(Sinput)
+        # S = S.detach()
+        # set_requires_grad(model.S3, False)
+
+        # stage4
+        # set_requires_grad(model.S4, True)
+        # for i in range(nsubruns):
+        #     Sinput = torch.cat((F, L, S), 1)
+        #     S = model.S4(Sinput)
+        #     if use_unlabelled_mask == True:
+        #         S[Starget == 0] = 0
+        #     lossS4 = criterionS4(S, Starget)
+        #     if i < (nsubruns - 1):
+        #         lossS4.backward()
+        #     else:
+        #         lossS4.backward()
+        #     optimizerS4.step()
+        #     model.S4.zero_grad()
+        # Sinput = torch.cat((F, L, S), 1)
+        # S = model.S4(Sinput)
+        # S = S.detach()
+        # set_requires_grad(model.S4, False)
+
         # S, L, F = None, None, None
 
 
@@ -298,6 +347,9 @@ for i in range(epochs):
 
         writer.add_scalar('L'+str(i), overallLossL.item(), step)
         writer.add_scalar('S'+str(i), overallLossS.item(), step)
+
+        #monitoring gradients
+        # monitor_gradient_shift(writer, d, ("L","S"), step, 'gradientshift.grad')
 
 
         #adding images

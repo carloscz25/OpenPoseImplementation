@@ -69,6 +69,10 @@ for step, ([impreprocessed, Starget, Ltarget, original_image_dim], [ann, image_u
     S = model.S1(Sinput)
     Sinput = torch.cat((F, L, S), 1)
     S = model.S2(Sinput)
+    Sinput = torch.cat((F, L), 1)
+    S = model.S3(Sinput)
+    Sinput = torch.cat((F, L, S), 1)
+    S = model.S4(Sinput)
 
     index = 0
     original_image = cv2.imread(image_url[index])

@@ -1,0 +1,6 @@
+14042020
+========
+
+Hasta la fecha he trabajado con 4 stages L y 2 S. Hoy paso de 2 a 4 S. He trabajado con learning rates iniciales de 2e-3 a 2e-6. No parece influir en el resultado. Las oscilaciones del loss
+parecen tener que ver con que el dataset se distribuye de esa manera con picos y en los minimos reduciendose muy lentamente. Como no parezco progresar, debere volver a hacer pruebas con
+una muestra pequenya a ver si el modelo converge.

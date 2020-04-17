@@ -46,9 +46,16 @@ def monitor_gradient_shift(writer, mods, names, step, filepath):
                         hasbias=True
                     else:
                         hasbias=False
-                    mw = mod._parameters['weight'].clone().detach().numpy()
+                    if mod._parameters['weight'].device.type == "cuda":
+                        mw = mod._parameters['weight'].clone().to(torch.device("cpu")).detach().numpy()
+                    else:
+                        mw = mod._parameters['weight'].clone().detach().numpy()
                     if hasbias:
-                        mb = mod._parameters['bias'].clone().detach().numpy()
+                        # mb = mod._parameters['bias'].clone().detach().numpy()
+                        if mod._parameters['bias'].device.type == "cuda":
+                            mb = mod._parameters['bias'].clone().to(torch.device("cpu")).detach().numpy()
+                        else:
+                            mb = mod._parameters['bias'].clone().detach().numpy()
                     mw[mw > 0] = 1
                     mw[mw == 0] = 0
                     mw[mw < 0] = -1

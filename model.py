@@ -107,6 +107,8 @@ class OpenPoseModel(nn.Module):
         #SStages
         self.S1 = SStage(12, 148, 96, 256)#180, 96, 256
         self.S2 = SStage(12, 160, 128, 512)  # 180, 96, 256
+        # self.S3 = SStage(12, 160, 128, 512)  # 180, 96, 256
+        # self.S4 = SStage(12, 160, 128, 512)  # 180, 96, 256
 
     def init_weights(self, fn):
         self.cpm1.apply(fn)
@@ -123,6 +125,9 @@ class OpenPoseModel(nn.Module):
         # SStages
         self.S1.apply(fn)
         self.S2.apply(fn)
+        #extension
+        # self.S3.apply(fn)
+        # self.S4.apply(fn)
 
 
 
